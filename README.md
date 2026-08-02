@@ -16,12 +16,12 @@
 </p>
 
 <p align="center">
-  <a href="./LICENSE"><img src="https://img.shields.io/github/license/JesonChou/EMC_Principle_GroupProject?style=flat-square&color=8b949e&labelColor=161b22" alt="license"/></a>
-  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/JesonChou/EMC_Principle_GroupProject/ci.yml?style=flat-square&label=ci&labelColor=161b22&logo=githubactions&logoColor=white" alt="CI"/></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/JesonChou/EMC-fault-probe?style=flat-square&color=8b949e&labelColor=161b22" alt="license"/></a>
+  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/JesonChou/EMC-fault-probe/ci.yml?style=flat-square&label=ci&labelColor=161b22&logo=githubactions&logoColor=white" alt="CI"/></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10+-5fa04e?style=flat-square&labelColor=161b22&logo=python&logoColor=white" alt="python"/></a>
-  <a href="https://github.com/JesonChou/EMC_Principle_GroupProject/stargazers"><img src="https://img.shields.io/github/stars/JesonChou/EMC_Principle_GroupProject?style=flat-square&color=dbab09&labelColor=161b22&logo=github&logoColor=white" alt="stars"/></a>
-  <a href="https://github.com/JesonChou/EMC_Principle_GroupProject/graphs/contributors"><img src="https://img.shields.io/github/contributors/JesonChou/EMC_Principle_GroupProject?style=flat-square&color=bc8cff&labelColor=161b22&logo=github&logoColor=white" alt="contributors"/></a>
-  <a href="https://github.com/JesonChou/EMC_Principle_GroupProject/issues"><img src="https://img.shields.io/github/issues/JesonChou/EMC_Principle_GroupProject?style=flat-square&color=58a6ff&labelColor=161b22&logo=github&logoColor=white" alt="issues"/></a>
+  <a href="https://github.com/JesonChou/EMC-fault-probe/stargazers"><img src="https://img.shields.io/github/stars/JesonChou/EMC-fault-probe?style=flat-square&color=dbab09&labelColor=161b22&logo=github&logoColor=white" alt="stars"/></a>
+  <a href="https://github.com/JesonChou/EMC-fault-probe/graphs/contributors"><img src="https://img.shields.io/github/contributors/JesonChou/EMC-fault-probe?style=flat-square&color=bc8cff&labelColor=161b22&logo=github&logoColor=white" alt="contributors"/></a>
+  <a href="https://github.com/JesonChou/EMC-fault-probe/issues"><img src="https://img.shields.io/github/issues/JesonChou/EMC-fault-probe?style=flat-square&color=58a6ff&labelColor=161b22&logo=github&logoColor=white" alt="issues"/></a>
   <a href="./CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square&labelColor=161b22" alt="PRs welcome"/></a>
 </p>
 <h3 align="center">输入中文故障描述，一键检索"故障—原因—方案"</h3>
@@ -34,7 +34,7 @@
   <img src="./README.assets/llm1.png" alt="LLM 语义扩展检索" width="360"/>
   <img src="./README.assets/llm2.png" alt="LLM 检索结果" width="360"/>
 </p>
-> [!TIP]
+> [!NOTE]
 >
 > 未安装本地 Ollama 模型时，程序自动降级为普通关键词检索，全部功能不受影响。
 
@@ -117,7 +117,7 @@ $env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 
 本项目按社区规范开放协作：
 
-- 报告 Bug 或功能建议 → [GitHub Issues](https://github.com/JesonChou/EMC_Principle_GroupProject/issues)
+- 报告 Bug 或功能建议 → [GitHub Issues](https://github.com/JesonChou/EMC-fault-probe/issues)
 - 提交代码 → 遵循 [CONTRIBUTING.md](./CONTRIBUTING.md)：从 `main` 创建 `feat/xxx` 分支，完成后提交 Pull Request
 - 代码质量门槛 → `ruff check Codes/` 通过，新功能附带测试；CI 在 Ubuntu / Windows 上对 Python 3.11 / 3.12 自动执行 lint 与 pytest
 
@@ -132,17 +132,17 @@ $env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=JesonChou%2FEMC_Principle_GroupProject&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=JesonChou%2FEMC-fault-probe&type=date&legend=top-left">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC_Principle_GroupProject&type=date&theme=dark&legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC_Principle_GroupProject&type=date&legend=top-left" />
-    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=JesonChou/EMC_Principle_GroupProject&type=date&legend=top-left" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC-fault-probe&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC-fault-probe&type=date&legend=top-left" />
+    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=JesonChou/EMC-fault-probe&type=date&legend=top-left" />
   </picture>
 </a>
 
 ## Support
 
-如果这个项目对你有帮助，欢迎给仓库点一个 Star；遇到问题请先查阅 [Issues](https://github.com/JesonChou/EMC_Principle_GroupProject/issues) 或直接提问。
+如果这个项目对你有帮助，欢迎给仓库点一个 Star；遇到问题请先查阅 [Issues](https://github.com/JesonChou/EMC-fault-probe/issues) 或直接提问。
 
 ## Acknowledgments
 
@@ -157,8 +157,8 @@ $env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 同时感谢 [Ollama](https://ollama.com/) 本地大模型平台与 [PyQt](https://www.riverbankcomputing.com/software/pyqt/) 桌面框架，以及提供数据支持的在线 LLM（DeepSeek、ChatGPT）与课程参考资料。
 
 <p align="center">
-  <a href="https://github.com/JesonChou/EMC_Principle_GroupProject/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=JesonChou/EMC_Principle_GroupProject&max=100&columns=12" alt="Contributors to JesonChou/EMC_Principle_GroupProject" width="720"/>
+  <a href="https://github.com/JesonChou/EMC-fault-probe/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=JesonChou/EMC-fault-probe&max=100&columns=12" alt="Contributors to JesonChou/EMC-fault-probe" width="720"/>
   </a>
 </p>
 
@@ -167,5 +167,5 @@ $env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 <p align="center">
   <sub>MIT — see <a href="./LICENSE">LICENSE</a></sub>
   <br/>
-  <sub>Built by group 20 at <a href="https://github.com/JesonChou/EMC_Principle_GroupProject">JesonChou/EMC_Principle_GroupProject</a></sub>
+  <sub>Built by group 20 at <a href="https://github.com/JesonChou/EMC-fault-probe">JesonChou/EMC-fault-probe</a></sub>
 </p>
