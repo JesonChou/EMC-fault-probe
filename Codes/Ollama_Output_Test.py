@@ -1,11 +1,11 @@
-import ollama, chromadb
-import numpy as np
-import time
 import subprocess
+import time
 import urllib.request  # 用于探测 Ollama HTTP 服务是否已就绪
 
-from ollama import ChatResponse
-from ollama import chat
+import chromadb
+import numpy as np
+import ollama
+from ollama import ChatResponse, chat
 
 data_path = "./emc_vector_db"
 collection_name = "emc_faults"
@@ -46,7 +46,7 @@ def is_ollama_serving() -> bool:
     try:
         urllib.request.urlopen("http://127.0.0.1:11434/api/tags", timeout=2)
         return True
-    except Exception:
+    except OSError:  # 连接失败/超时均属 OSError 家族（URLError 为其子类）
         return False
 
 
@@ -63,13 +63,14 @@ def start_ollama_background():
         return None
 
     # ② 用 `ollama serve` 后台启动常驻服务（不是交互式的 `ollama run`）
-    #    日志重定向到文件：若用 PIPE 且不读取，管道写满会阻塞进程
-    log = open("ollama_serve.log", "a", encoding="utf-8")
-    process = subprocess.Popen(
-        ["ollama", "serve"],
-        stdout=log,
-        stderr=subprocess.STDOUT,
-    )
+    #    日志重定向到文件：若用 PIPE 且不读取，管道写满会阻塞进程。
+    #    用 with 管理文件：Popen 返回后子进程已持有句柄副本，父进程关闭不影响写日志。
+    with open("ollama_serve.log", "a", encoding="utf-8") as log:
+        process = subprocess.Popen(
+            ["ollama", "serve"],
+            stdout=log,
+            stderr=subprocess.STDOUT,
+        )
     print(f"Ollama serve 已启动，进程ID: {process.pid}（日志见 ollama_serve.log）")
 
     # ③ 轮询等待服务就绪（服务冷启动需要几秒，最多等 15 秒）
@@ -156,7 +157,7 @@ try:
             print(msg['content'], end='', flush=True)
     print() 
 
-except Exception as e:
+except Exception as e:  # noqa: BLE001 - 顶层兜底：任何生成异常都统一提示，便于定位
     print(f"生成失败: {e}")
 
 finally:
