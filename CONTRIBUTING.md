@@ -29,7 +29,7 @@ Thanks for your interest in contributing! This project follows the standard GitH
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/JesonChou/EMC-fault-probe/issues) to report bugs or request features. Please include:
+Use [GitHub Issues](https://github.com/JesonChou/EMC_Principle_GroupProject/issues) to report bugs or request features. Please include:
 
 - Steps to reproduce (for bugs)
 - Expected vs. actual behavior
