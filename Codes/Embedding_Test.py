@@ -103,7 +103,7 @@ query_embedding = ollama.embed(model="nomic-embed-text", input=query)["embedding
 
 # query的向量化和数据的向量化做余弦
 
-data  =collection.get(include=["embeddings", "metadatas"])
+data  = collection.get(include=["embeddings", "metadatas"])
 
 file_vectors = np.array(data["embeddings"])
 
