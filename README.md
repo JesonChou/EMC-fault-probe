@@ -1,16 +1,46 @@
-<h1 align = "center">EMC Principle Group Project</h1>
+<h1 align="center">电磁兼容故障库（中文资料）</h1>
 
-<h1 align = "center">电磁兼容故障库（中文资料）</h1>
-<h3 align="right">——项目过程与细节记录</h3>
-<p align="right">第20组-大作业<br>小组成员：朱宛瑜 皇甫依扬 甄一帆 刘子晗<br>Date: From 2025.11.15 to 2025.12.30</p>
 
-<center>用于EMC小组大作业版本管理</center>
+> [!NOTE]
+>
+> **项目愿景**：构建一个基于 **RAG（检索增强生成）与长期记忆系统**的电磁兼容故障库 **AGENT** —— 沿"数据来源 → 知识加工 → 结构化存储 → 功能迭代"主线，将分散、非结构化的 EMC 故障资料沉淀为结构化、可复用的故障知识体系，由 LLM 驱动实现智能查询、故障诊断辅助、知识动态增量构建与更新提示。
+>
+> **当前进度**：故障库基础版已完成 —— 从文献、网页与在线 LLM 三渠道收集数据，经清洗、LLM 结构化提取与合并去重，入库约 200 条"故障—原因—方案"词条；PyQt6 桌面程序实现关键词检索、本地 Ollama LLM 查询扩展与 Excel 导出。基于 ChromaDB 的 RAG 语义检索已有实验实现（见`Codes/Embedding_Test.py` 与 `Codes/emc_vector_db/`）；AGENT 化（长期记忆、诊断辅助、增量入库）为后续迭代方向。
 
-<div style="page-break-after: always;"></div>
+<p align="center">
+  <strong>简体中文</strong>
+  &nbsp;·&nbsp;
+  <a href="./README.en.md">English</a>
+  &nbsp;·&nbsp;
+  <a href="./docs/项目过程与细节记录.md">项目过程与细节记录</a>
+</p>
 
-## 运行与开发
+<p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/JesonChou/EMC_Principle_GroupProject?style=flat-square&color=8b949e&labelColor=161b22" alt="license"/></a>
+  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/JesonChou/EMC_Principle_GroupProject/ci.yml?style=flat-square&label=ci&labelColor=161b22&logo=githubactions&logoColor=white" alt="CI"/></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10+-5fa04e?style=flat-square&labelColor=161b22&logo=python&logoColor=white" alt="python"/></a>
+  <a href="https://github.com/JesonChou/EMC_Principle_GroupProject/stargazers"><img src="https://img.shields.io/github/stars/JesonChou/EMC_Principle_GroupProject?style=flat-square&color=dbab09&labelColor=161b22&logo=github&logoColor=white" alt="stars"/></a>
+  <a href="https://github.com/JesonChou/EMC_Principle_GroupProject/graphs/contributors"><img src="https://img.shields.io/github/contributors/JesonChou/EMC_Principle_GroupProject?style=flat-square&color=bc8cff&labelColor=161b22&logo=github&logoColor=white" alt="contributors"/></a>
+  <a href="https://github.com/JesonChou/EMC_Principle_GroupProject/issues"><img src="https://img.shields.io/github/issues/JesonChou/EMC_Principle_GroupProject?style=flat-square&color=58a6ff&labelColor=161b22&logo=github&logoColor=white" alt="issues"/></a>
+  <a href="./CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square&labelColor=161b22" alt="PRs welcome"/></a>
+</p>
+<h3 align="center">输入中文故障描述，一键检索"故障—原因—方案"</h3>
+<p align="center">从文献、网页与在线 LLM 三渠道收集 EMC 故障案例，经数据清洗与 LLM 结构化提取，构建约 200 条结构化词条；桌面程序支持精确检索、LLM 语义扩展与 Excel 导出。</p>
 
-桌面程序的源码入口为 `Codes/EMC_Fault_Database_Test.py`。建议使用 Python 3.10 或更高版本，并在仓库根目录安装依赖：
+<p align="center">
+  <img src="./README.assets/main.png" alt="故障库查询程序主界面" width="720"/>
+</p>
+<p align="center">
+  <img src="./README.assets/llm1.png" alt="LLM 语义扩展检索" width="360"/>
+  <img src="./README.assets/llm2.png" alt="LLM 检索结果" width="360"/>
+</p>
+> [!TIP]
+>
+> 未安装本地 Ollama 模型时，程序自动降级为普通关键词检索，全部功能不受影响。
+
+## Install
+
+要求 Python 3.10+，支持 Windows / Linux / macOS。
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -18,18 +48,19 @@ cd Codes
 python EMC_Fault_Database_Test.py
 ```
 
-程序只加载发布数据文件 `data_1.json` 和 `data_2.json`，并在加载时按完整词条去重。`12.29.json` 是 `data_2.json` 的历史重复副本，保留在仓库中用于追溯，不会参与运行时检索。
-
-本地语义扩展是可选功能：安装并启动 Ollama 后，下载默认模型 `deepseek-r1:8b`；也可通过环境变量 `EMC_OLLAMA_MODEL` 指定已安装的其他模型。没有本地模型时，程序仍会进行普通关键词检索。
+> [!NOTE]
+>
+> 程序仅加载发布数据文件 `data_1.json` 与 `data_2.json`，并在加载时按完整词条去重。`12.29.json` 是 `data_2.json` 的历史重复副本，仅供追溯，不参与运行时检索。
 
 运行测试：
 
 ```powershell
-python -m pip install -r requirements-dev.txt
-python -m unittest discover -s tests
+python -m pip install -r requirements-dev.txt pytest
+python -m pytest tests/ -v              # 应用级测试（仓库根目录）
+cd Codes; python -m pytest tests/ -v    # 代码级测试
 ```
 
-重新打包 Windows 可执行文件时，请使用开发依赖，并将输出放在未跟踪的 `artifacts/` 目录，避免覆盖仓库中的历史发布文件：
+打包 Windows 可执行文件（输出到未跟踪的 `artifacts/`，避免覆盖历史发布文件）：
 
 ```powershell
 python -m pip install -r requirements-dev.txt
@@ -37,740 +68,104 @@ cd Codes
 pyinstaller --clean --noconfirm --distpath ..\artifacts\dist --workpath ..\artifacts\build EMC_Fault_Database_Test.spec
 ```
 
-# 1.历史故障数据收集
+## Configuration
 
-在这一部分，我们需要从不同的来源收集电磁兼容故障及解决方案，以PDF文件的格式进行整理和存储。资料来源分为期刊论文、行业报告等文献、网页资料链接、在线LLM（Deepseek & ChatGPT etc.）三个部分。其示例如1.1、1.2、1.3三个小节所示。
+本地语义扩展是可选功能，通过 [Ollama](https://ollama.com/) 提供。
 
-## 1.1 期刊论文、行业报告等文献
-
-以下为中文文献资料示例，使用**GB/T 7714-2015**格式参考列出。
-
-[1]彭宇,张莉,梁培. 基于机器学习的电磁兼容故障诊断综述[J]. 电力电子技术,2025,59(1):30-36. DOI:10.3969/j.issn.1000-100X.2025.01.008.
-
-[2]宋健,贺庚贤,葛欣宏. 空间光学有效载荷电磁兼容故障诊断[J]. 现代电子技术,2018,41(6):74-78. DOI:10.16652/j.issn.1004-373x.2018.06.018.
-
-## 1.2 网页资料链接
-
-[1]:[设备电磁兼容性故障的诊断和一般性处理意见.PDF 全文免费](https://max.book118.com/html/2019/0513/7166026100002025.shtm)
-
-## 1.3 LLM（Deepseek & ChatGPT etc.）
-
-询问在线大语言模型，让其给出电磁兼容的故障及解决方案。一个Prompt示例及Deepseek响应结果如下。
-
-**Prompt：**
-
-> [!IMPORTANT]
->
-> 请给我一些典型的电磁兼容故障以及解决方案
-
-**Deepseek响应：**
-
-> 好的，这是一个非常实际且重要的问题。电磁兼容故障千奇百怪，但核心原理相通。以下是一些**典型的电磁兼容故障案例**及其**分析和解决方案**，涵盖了不同领域。
->
-> ### EMC故障核心三要素
->
-> 所有EMC问题都涉及三个要素：**干扰源**、**传播路径**和**敏感设备**。解决方案也围绕这三者展开：**抑制源、切断路径、保护受体**。
->
-> ---
->
-> ### 典型故障案例与解决方案
->
-> #### 案例一：工业控制系统误动作或重启
-> *   **故障现象**： 工厂生产线上的PLC（可编程逻辑控制器）或变频器附近的大型电机启动时，PLC出现无规律误报警、数据跳变、甚至重启。触摸屏显示闪烁或花屏。
-> *   **原因分析**：
->     1.  **干扰源**： 大型电机（尤其是感应电机）启动时会产生巨大的**浪涌电流**和伴随的**传导干扰**，同时电机的电刷（如有）会产生强烈的**电磁辐射**。变频器输出的PWM波形含有丰富的高次谐波。
->     2.  **传播路径**：
->         *   **传导路径**： 干扰通过共同的电源线传入PLC的电源模块。
->         *   **辐射路径**： 电机、变频器到PLC柜或信号电缆的**空间辐射**。
->         *   **耦合路径**： 电机动力线与PLC信号线在桥架中平行敷设，通过**感性或容性耦合**将干扰串入信号线。
-> *   **解决方案**：
->     1.  **抑制源**：
->         *   在电机输入端加装**三相电源滤波器**或**电抗器**。
->         *   为变频器输入端和输出端加装专用**变频器滤波器**。
->         *   对电机外壳进行良好接地，必要时使用**屏蔽电机**。
->     2.  **切断路径**：
->         *   **布线隔离**： 严格将动力电缆（≥30cm）与信号电缆、控制电缆分开布线，避免平行。若必须交叉，应成90°角交叉。
->         *   **屏蔽**： 所有敏感信号线使用**屏蔽双绞线**，屏蔽层在控制器端**单点接地**（防止地环路）。
->         *   **接地系统**： 建立**干净、低阻抗的接地系统**。将控制系统（PLC、仪表）的接地与动力设备（电机、变频器）的接地在一点汇接，避免地电位差引入干扰。
->     3.  **保护受体**：
->         *   为PLC的电源前端加装**高性能单相电源滤波器**。
->         *   在PLC的模拟量输入/数字量输入模块前，对长线信号加装**信号滤波器**或**隔离器**
->
-> ······（若干其他案例）
->
-> ---
->
-> ### 通用EMC问题排查与解决流程
-> 1.  **现象定位**： 明确干扰现象、发生条件（何时、何操作下）、影响设备。
-> 2.  **确定三要素**： 根据现象，推理可能的干扰源、传播路径和敏感部位。
-> 3.  **简易措施验证**：
->     *   在敏感设备电源线上套一个**钳式铁氧体磁环**（抑制共模传导）。
->     *   临时用铜箔胶带包裹可疑电缆或设备缝隙（验证屏蔽效果）。
->     *   拔掉非必要外设，看问题是否消失（定位干扰入口）。
-> 4.  **针对性改进**： 根据验证结果，实施上述的滤波、屏蔽、接地等永久性措施。
-> 5.  **系统设计预防**： 对于新产品，在**设计初期**就进行EMC规划（芯片选型、PCB布局、结构设计），这比后期整改成本低得多。
->
-> **核心要诀**： EMC是系统工程，**良好的接地和屏蔽是基础，精心的滤波是利器，而优秀的PCB设计是根本**。遇到问题，务必从“源-径-受体”三个环节系统分析，方能标本兼治。
-
-我们将上述三个来源的数据资料进行保存，统一存储为PDF格式。
-
-# 2.数据预处理
-
-我们需要对从不同途径收集来的故障信息进行清洗。主要的工作如下：
-
-1. 筛选数据文本，去除无关符号、空白、重复内容，去除不包含实际问题与方案的内容；
-2. 将不同格式（PDF、Word、网页）的资料转为统一格式（如 TXT 或 JSON）；
-
-## 2.1 人工筛选原始数据
-
-我们对收集到的文本进行人工筛选，去除无关符号、空白、重复内容，去除不包含实际问题与方案的内容，最终筛选出63个可用的资料文件，如图1所示。
-
-<img src="./README.assets/image-20251230121331674.png" alt="image-20251230121331674" style="zoom: 25%;" />
-
-<center>图1 可用原始数据</center>
-
-## 2.2 转换数据为JSON格式
-
-在这一步，我们使用在线转换工具ConvertTool[^1]将所有可用的PDF文件转化为JSON格式。
-
-将PDF格式的论文转化为JSON格式的示例如下：
-
-```json
-{
-"metadata": {
- "filename": "空间光学有效载荷电磁兼容故障诊断.pdf",
- "pageCount": 5,
- "convertedAt": "2025-11-15T14:22:23.464Z"
-},
-"pages": [
- {
-   "pageNumber": 1,
-   "text": "现代电子技术···",
-   "stats": {
-     "charCount": 2582,
-     "wordCount": 240
-   }
- },
- {
-   "pageNumber": 2,
-   "text": "第 6 期 宋 健，等：···",
-   "stats": {
-     "charCount": 1244,
-     "wordCount": 89
-   }
- },
- {
-   "pageNumber": 3,
-   "text": "现代电子技术 ···",
-   "stats": {
-     "charCount": 1229,
-     "wordCount": 153
-   }
- },
- {
-   "pageNumber": 4,
-   "text": "第 6 期 宋 健，等：···",
-   "stats": {
-     "charCount": 2154,
-     "wordCount": 347
-   }
- },
- {
-   "pageNumber": 5,
-   "text": "现代电子技术 ···",
-   "stats": {
-     "charCount": 3620,
-     "wordCount": 331
-   }
- }
-]
-}
-```
-
-# 3.利用LLM提取结构化信息
-
-## 3.1 结构化字段
-
-让LLM从非结构化的故障描述中提取结构化字段，例如：
-
-|  字段头  |          字段内容          |
-| :------: | :------------------------: |
-| 故障对象 |   如“电机A”、“通信模块”    |
-| 故障现象 |  如“通信中断”、“辐射超标”  |
-| 故障原因 | 如“接地不良”、“滤波器失效” |
-| 解决方案 | 如“重新接地”、“更换滤波器” |
-| 故障等级 |      如“严重”、“一般”      |
-| 发生频率 |      如“高频”、“偶发”      |
-
-## 3.2 Prompt及提取效果
-
-一个基础故障信息提取Prompt示例如下：
-
-> [!IMPORTANT]
->
-> 你是一个电磁兼容故障分析专家，请从以下中文文本JSON文件中提取电磁兼容相关的故障信息，按照JSON格式返回：
->
-> **提取字段要求：**
->
-> - 故障对象：发生故障的具体设备、部件或系统
-> - 故障现象：可观察到的电磁兼容异常表现
-> - 故障原因：导致故障的根本原因分析
-> - 解决方案：修复故障的具体措施或方法
-> - 故障等级：根据影响程度判断（致命/严重/一般/轻微）
-> - 发生频率：高频/中频/低频/偶发（根据文本描述推断）
->
-> 
->
-> **输出要求：**
->
-> - 只输出JSON格式，不包含其他说明文字
-> - 如果某个字段无法确定，设为空字符串
-> - 保持术语的专业性和准确性
-
-提取效果为：
-
-```json
-[ 
-    {
-    "故障对象": "设备",
-    "故障现象": "由射频场感应所引起的传导干扰抗扰度试验不合格",
-    "故障原因": "共模干扰通过线缆引入设备内部",
-    "解决方案": "加强滤波；改善设备内部布线和布局；参考传导发射超标的处理措施",
-    "故障等级": "一般",
-    "发生频率": "中频"
-    }
-]
-```
-
-可以看到，提取出的数据结构性较强，满足要求。后续需要对数据进行进一步的清洗和整理，构建更清晰高效的JSON格式的数据文件，用以构建故障库。
-
-## 3.3 利用LLM合并同义不同述数据
-
-完成3.2节的工作后，我们将得到的多个JSON文件上传给Deepseek，让其帮助我们合并。Prompt及响应如图2所示。
-
-<center class="half">    
-    <img src="./README.assets/image-20251230130149398.png" width="250"/>    
-    <img src="./README.assets/image-20251230130209724.png" width="300"/> 
-</center>
-
-<center>图2 利用LLM合并同义不同述数据</center>
-
-# 4.构建故障库
-
-利用第3节中所述的步骤提取出结构化信息后，利用这些信息来构建故障库：
-
-1. 将提取的结构化数据存入数据库（如 MySQL、MongoDB，或者直接用JSON格式存储）；
-2. 建立“故障-原因-解决方案”之间的关联关系。
-
-我们认为JSON格式本身的结构化程度已经足够满足项目需求，每个词条都包含了故障现象-故障原因-解决方案且词条内部一一对应，因此我们直接将第3节中得到的数据存储为JSON格式，不再做其他的数据格式转换。存储的JSON数据文件内容如图3所示，包含200个左右的故障词条。
-
-<img src="./README.assets/image-20251230131410389.png" alt="image-20251230131410389" style="zoom: 20%;" />
-
-<center>图3 用作数据库的JSON格式文件</center>
-
-# 5.故障库应用功能设计
-
-我们对任务描述中==技术路径一==的应用设计（即实现用户使用中文查询故障即解决方案）的思路如下：
-
-1. 将前述步骤所建立的数据库存储为某种格式的数据文件，如MySQL、JSON格式等；
-2. 使用Python[^2]编写UI程序，用户在输入框输入想要查询的问题（例如用户输入”辐射发射超标“），程序根据用户输入匹配故障库中相应的故障词条，并返回词条内容；
-3. 使用PyQt5设计用户交互界面[^3][^4]；
-4. 在程序中嵌入LLM[^5]，利用LLM进行模糊或近义语义匹配，优化用户体验。
-
-## 5.1 UI界面设计
-
-这一步我们使用外部工具QtDesigner设计师进行UI界面的设计。我们对于整个故障库程序的界面布局设计主要包括以下几个方面：
-
-1. 用户文本输入框（QTextEdit）
-2. 发送、保存数据、退出程序三个按钮（QPushButton）
-3. 将匹配词条显示到UI界面上（QTableView）
-4. 警告信息与提示信息显示（QLabel）
-5. 北航Logo（QLabel）
-6. 作者信息（QLabel）
-
-使用Layout将上述需要的若干控件进行布局。设计完成后进行保存，文件名为`EMC_Fault_Database.ui`。
-
-使用外部工具PyUIC将`EMC_Fault_Database.ui`文件转化为`EMC_Fault_Database.py`文件。然后在项目文件夹下新建`EMC_Fault_Database_Test.py`文件，用于编写应用程序。
-
-在`EMC_Fault_Database_Test.py`文件中添加如下代码，用于运行出UI：
-
-```python
-import sys
-import EMC_Fault_Database
-
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QApplication
-
-
-class MainWindows(QMainWindow, EMC_Fault_Database.Ui_MainWindow):
-    def __init__(self, parent=None):
-        QMainWindow.__init__(self, parent)
-        self.setupUi(self)
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    main = MainWindows()
-    main.setWindowTitle('电磁兼容故障库')
-    main.setWindowIcon(QIcon("BUAA_logo_2048px.png"))
-    main.show()
-    sys.exit(app.exec_())
-```
-
-点击运行，得到UI界面如图4所示。
-
-<div align="center">
-  <img src="./README.assets/main.png" alt="main" style="zoom:50%;" />
-</div>
-
-<center>图4 设计并运行出的UI界面</center>
-
-接下来，就可以在`EMC_Fault_Database_Test.py`文件中编写业务代码，实现我们需要的功能。
-
-## 5.2 PyQt5编写故障库查询程序
-
-查询程序的核心功能主要包括以下几个方面。我们在这一部分详细阐述程序思路，并展示相关代码。
-
-### 5.2.1 读取程序文件夹下的JSON文件
-
-这一功能需要读取程序相对路径下的所有JSON格式的数据文件并存储。要求不限数量，且每个读取完毕后存储到同一个变量中。该功能的实现方法如下：
-
-1. 在`MainWindows`类中的`def __init__(self, parent=None):`方法下添加全局变量定义：
-
-   ```python
-   self.json_dir = "."  # 读取当前目录下的所有json文件
-   self.readJsonData = []  # 读取json文件得到的数据
-   ```
-
-2. 在`MainWindows`类中添加如下方法：
-
-   ```python
-   def load_json_file(self):
-       try:
-           json_dir = self.json_dir
-   
-           # 遍历指定目录下的所有文件
-           for filename in os.listdir(json_dir):
-               if filename.endswith('.json'):
-                   file_path = os.path.join(json_dir, filename)
-                   with open(file_path, 'r', encoding='utf-8') as f:
-                       data = json.load(f)
-                       # 假设每个json文件都是列表或字典，统一合并到readJsonData列表中
-                       ...
-       except Exception as e:
-           error_details = f"错误类型: {type(e).__name__}\n\n详细错误:\n{traceback.format_exc()}"
-           QMessageBox.critical(self, '系统错误', f'发生错误:\n{error_details}')
-   ```
-
-3. 在`if __name__ == '__main__':`中添加如下代码，将其放在`main.show()`后和`sys.exit(app.exec_())`前：
-
-   ```python
-   main.load_json_file()
-   ```
-
-### 5.2.2 获取用户输入的文本并查询
-
-这一功能需要获取用户在UI文本框中输入的查询内容，并基于这些内容在已加载的JSON数据库中进行检索。程序会根据用户是否启用本地LLM服务，分别采用精确匹配或LLM增强的模糊语义匹配两种搜索模式。实现方法如下：
-
-1. 在 `MainWindows` 类中定义相关变量，用于存储搜索状态和结果：
-
-   ```python
-   self.searchTextfromUserInput = None  # 来自用户输入的要搜索的字段
-   self.target_field = None  # 目标字段
-   self.search_string = None  # 搜索字段
-   self.search_results_exact = []  # 精确字段匹配的结果
-   ```
-
-2. 为“发送”按钮（`sendPushButton`）绑定点击事件处理函数
-
-   ```python
-   self.sendPushButton.clicked.connect(self.sendPushButtonClicked)
-   ```
-
-3. 实现 `sendPushButtonClicked` 方法，处理用户查询请求：
-
-   ```python
-   def sendPushButtonClicked(self):
-       try:
-           # 重置表格
-           self.resetdispTableView()
-           # 判断输入框是否为空
-           if self.userInputTextEdit.toPlainText() != "":
-               # 获取用户输入
-               user_input = str(
-                   self.userInputTextEdit.toPlainText())
-               # 禁用发送按钮，防止重复点击
-               self.sendPushButton.setEnabled(False)
-               # 判断本地LLM大模型是否可用
-               # 可用则使用大模型进行关键词模糊匹配
-               if self.ollama_available:
-                   self.infoLabel.setText("正在生成搜索关键词...")
-                   # 创建并启动LLM工作线程
-   		...
-               # 本地LLM不可用，直接使用精确匹配
-               else:
-                   self.infoLabel.setText("正在使用精确匹配搜索...")
-                   self.do_exact_search([user_input])
-                   self.sendPushButton.setEnabled(True)
-           else:
-               self.infoLabel.setText("请您输入文本！")
-       except Exception as e:
-           error_details = f"错误类型: {type(e).__name__}\n\n详细错误:\n{traceback.format_exc()}"
-           QMessageBox.critical(self, '系统错误', f'发生错误:\n{error_details}')
-   ```
-
-4. 实现精确匹配搜索方法 `do_exact_search`：
-
-   ```python
-   def do_exact_search(self, keywords):
-       """执行精确匹配搜索"""
-       self.search_results_exact = []
-       seen = set()
-       for search_string in keywords:
-           for item in self.readJsonData:
-               if self.target_field:
-   		...
-               else:
-                   for value in item.values():
-                       ...
-       # 更新UI显示结果
-       user_input = str(self.userInputTextEdit.toPlainText())
-       self.infoLabel.setText(f"{user_input}——找到 {len(self.search_results_exact)} 条匹配结果")
-       for i, entry in enumerate(self.search_results_exact):
-           self.model.setItem(i, 0, QStandardItem(entry.get('故障对象', '')))
-           self.model.setItem(i, 1, QStandardItem(entry.get('故障现象', '')))
-   	...
-       self.dispTableView.setModel(self.model)
-   ```
-
-### 5.2.3 将查询到的数据显示在UI界面上
-
-程序使用 `QTableView` 控件以表格形式展示查询结果。表格包含6个列：故障对象、故障现象、故障原因、解决方案、故障等级、发生频率。实现方法如下：
-
-1. 初始化表格模型和视图（在 `resetdispTableView` 方法中实现）：
-
-   ```python
-   def resetdispTableView(self):
-       # 规定水平表头标签
-       tableTitle = ['故障对象', '故障现象', '故障原因', '解决方案', '故障等级', '发生频率']
-       self.model = QStandardItemModel(1, len(tableTitle))
-       # 设置水平表头标签
-       self.model.setHorizontalHeaderLabels(tableTitle)
-       # 设置表格基础字体及表头字体
-       base_font = QFont("HarmonyOS Sans SC Medium", 10)
-       self.dispTableView.setFont(base_font)
-       header_font = QFont("HarmonyOS Sans SC Medium", 12, QFont.Bold)
-       self.dispTableView.horizontalHeader().setFont(header_font)
-   ```
-   
-2. 在搜索完成后，将结果数据填充到表格模型中（在 `do_exact_search`方法中实现）：
-
-   ```python
-   for i, entry in enumerate(self.search_results_exact):
-       self.model.setItem(i, 0, QStandardItem(entry.get('故障对象', '')))
-       self.model.setItem(i, 1, QStandardItem(entry.get('故障现象', '')))
-       ...
-   self.dispTableView.setModel(self.model)
-   ```
-
-### 5.2.4 导出查询到的词条到Excel
-
-用户可以将当前表格中显示的查询结果导出为Excel文件，便于进一步分析或存档。实现方法如下：
-
-1. 为“保存数据”按钮（`saveDataPushButton`）绑定点击事件处理函数：
-
-   ```python
-   self.saveDataPushButton.clicked.connect(self.save_userdata_pushButtonClicked)
-   ```
-
-2. 实现 `save_userdata_pushButtonClicked` 方法，处理数据导出：
-
-   ```python
-   def save_userdata_pushButtonClicked(self):
-       try:
-           self.save_data_path = QFileDialog.getSaveFileName(
-               None,
-               "选择目录",
-               "",
-               "Excel Files (*.xlsx);;All Files (*)"
-               # QFileDialog.ShowDirsOnly,
-           )
-           # print(self.save_data_path) # 调试用
-   
-           to_save_model = self.dispTableView.model()
-           # 获取行数和列数
-           ...
-           if row_count > 0 and col_count > 0:
-               # 提取表头
-               headers = []
-   	    ...
-               # 提取表格数据
-   	    ...	
-               # 使用pandas创建DataFrame并保存为Excel
-               df = pd.DataFrame(data, columns=headers)
-               df.to_excel(self.save_data_path[0], index=False)
-               self.infoLabel.setText("数据保存完成")
-           else:
-               self.infoLabel.setText("警告：表格数据为空！")
-       except Exception as e:
-           error_details = f"错误类型: {type(e).__name__}\n\n详细错误:\n{traceback.format_exc()}"
-           QMessageBox.critical(self, '系统错误', f'发生错误:\n{error_details}')
-           # print(error_details) # 调试用
-   ```
-
-通过5.2节的工作，我们实现了一个基本的电磁兼容故障库查询与导出功能。接下来，我们将本地LLM嵌入程序中，用以实现用户输入文本的模糊匹配。
-
-## 5.3 嵌入本地LLM
-
-在这一节，我们将详细讲述如何在本地部署LLM，并将其嵌入到基于Python的用户交互程序中，实现用户输入的语义模糊匹配。
-
-### 5.3.1 本地部署LLM
-
-这一步，我们参考网页资料[^6][^7]，使用Ollama[^8]平台进行本地部署。部署的测试模型参数为`Deepseek-r1:8b`，表示模型参数有80亿个。
-
-本地部署的指令如下：
+| 配置项 | 说明 |
+|:-:|:-:|
+| Ollama 服务 | 安装并启动 Ollama，`ollama run deepseek-r1:8b` 下载默认模型 |
+| `EMC_OLLAMA_MODEL` | 环境变量，指定本地已安装的其他模型（默认 `deepseek-r1:8b`） |
 
 ```cmd
 ollama run deepseek-r1:8b
 ```
 
-安装好Ollama后，将上述指令放在命令行当中运行。成功安装会显示如下结果：
-
-```cmd
-D:\Ollama>ollama run deepseek-r1:8b
-pulling manifest
-pulling e6a7edc1a4d7: 100% 5.2 GB
-pulling c5ad996bda6e: 100% 556 B
-pulling 6e4c38e1172f: 100% 1.1 KB
-pulling ed8474dc73db: 100% 179 B
-pulling f64cd5418e4b: 100% 487 B
-verifying sha256 digest
-writing manifest
-success
+```powershell
+$env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 ```
 
-一些常用的命令：
+程序启动时自动探测 Ollama 服务与可用模型；检测到后将用户输入交由 LLM 扩展为多个相关关键词再检索，提高模糊查询召回率。模型训练实验与提示词细节见 [docs/项目过程与细节记录.md](./docs/项目过程与细节记录.md)。
 
-```cmd
-ollama run deepseek-r1:8b 运行本地大模型
-ollama rm deepseek-r1:8b 删除本地大模型
-ollama serve 启动Ollama服务
-ollama stop 停止Ollama服务
-ollama restart 重启Ollama服务
-ollama --help 查看帮助及可用命令
-ollama update 更新Ollama版本
-ollama clean 清理缓存
+## What makes it different
 
-/bye 或者ctrl+d 退出交互模式
-```
+数据是核心资产：本项目不依赖现成数据集，而是从三类来源（期刊论文与行业报告、网页资料、在线 LLM 问答）收集故障案例，逐条完成"收集 → 清洗 → LLM 结构化提取 → 合并去重 → 入库"的完整流水线，最终形成故障现象、故障原因、解决方案一一对应的结构化词条库，并配套桌面检索程序落地使用。
 
-初始安装后，对模型进行问候，回复效果如图5所示。
+- 六字段结构化词条：故障对象 / 故障现象 / 故障原因 / 解决方案 / 故障等级 / 发生频率
+- 按完整词条去重，保证检索结果唯一
+- `QTableView` 表格化展示，一键导出 `.xlsx` 存档
+- LLM 查询扩展在后台线程（`QThread`）执行，不阻塞界面
 
-<img src="./README.assets/image-20251116141145385.png" alt="image-20251116141145385" style="zoom: 33%;" />
+## How it compares
 
-<center>图5  命令行中运行Ollama命令，调用本地LLM进行对话</center>
+|                                | 纯关键词检索 | 关键词 + LLM 语义扩展 |
+|:------------------------------:|:---:|:---:|
+| 精确匹配查询                  | 支持 | 支持 |
+| 近义/模糊语义匹配             | —   | 支持 |
+| 本地部署，数据不出本机        | 支持 | 支持 |
+| 离线可用（无 Ollama）         | 支持 | 自动降级为关键词检索 |
+| 额外依赖                      | 无 | Ollama + 本地模型 |
 
-### 5.3.2 Python脚本调用本地大模型
+## Documentation
 
-我们需要实现Python调用本地大模型，进行简要问答的功能。经过查询相关代码以及本地调试，我们初步实现了在Python中调用不同的模型进行简单问答。代码如下：
+- [**项目过程与细节记录**](./docs/项目过程与细节记录.md) — 完整开发过程：数据收集、预处理、LLM 提取、故障库构建、程序实现与代码讲解
+- [**README.en.md**](./README.en.md) — English version
+- [**CONTRIBUTING.md**](./CONTRIBUTING.md) — 贡献指南（GitHub Flow）
+- [**LICENSE**](./LICENSE) — MIT License
 
-```python
-import subprocess
-import time
+## Community
 
-from ollama import ChatResponse
-from ollama import chat
+本项目按社区规范开放协作：
 
-model_name = 'deepseek-r1:8b'
+- 报告 Bug 或功能建议 → [GitHub Issues](https://github.com/JesonChou/EMC_Principle_GroupProject/issues)
+- 提交代码 → 遵循 [CONTRIBUTING.md](./CONTRIBUTING.md)：从 `main` 创建 `feat/xxx` 分支，完成后提交 Pull Request
+- 代码质量门槛 → `ruff check Codes/` 通过，新功能附带测试；CI 在 Ubuntu / Windows 上对 Python 3.11 / 3.12 自动执行 lint 与 pytest
 
+## Non-goals
 
-def start_ollama_background():
-    """在后台启动Ollama服务"""
-    try:
-        # 使用Popen在后台启动服务
-        process = subprocess.Popen(
-            ['ollama', 'run', model_name],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
+本项目定位明确，以下内容不在范围内：
 
-        print(f"Ollama服务已启动，进程ID: {process.pid}")
+- **多语言语料**。当前仅收录中文资料；英文 EMC 语料可作为后续扩展方向。
+- **Web / 移动端**。以 Windows 桌面程序为主要交付形态（支持 PyInstaller 打包 `.exe`），不做在线服务。
+- **大规模数据库系统**。JSON 文件存储已满足约 200 条词条的结构化查询需求，不引入 MySQL / MongoDB 等外部服务。
+- **商业化**。MIT协议，若有商业需求，可直接联系开发者说明。
 
-        # 让服务运行一段时间
-        time.sleep(10)
+## Star History
 
-        # 检查进程是否还在运行
-        if process.poll() is None:
-            print("Ollama服务正在运行中...")
-        else:
-            print("Ollama服务已停止")
+<a href="https://www.star-history.com/?repos=JesonChou%2FEMC_Principle_GroupProject&type=date&legend=top-left">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC_Principle_GroupProject&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC_Principle_GroupProject&type=date&legend=top-left" />
+    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=JesonChou/EMC_Principle_GroupProject&type=date&legend=top-left" />
+  </picture>
+</a>
 
-        return process
+## Support
 
-    except Exception as e:
-        print(f"启动失败: {e}")
-        return None
+如果这个项目对你有帮助，欢迎给仓库点一个 Star；遇到问题请先查阅 [Issues](https://github.com/JesonChou/EMC_Principle_GroupProject/issues) 或直接提问。
 
+## Acknowledgments
 
-# 启动服务
-ollama_process = start_ollama_background()
+致谢：
 
-# %%
-try:
-    # 流式输出（即一个字一个字蹦）
-    response: ChatResponse = chat(
-        model=model_name,
-        messages=[{'role': 'user', 'content': '你好，你是谁？', }],
-        stream=True,
-    )
-    print(response['message']['content'])
+- [**JesonChou**](https://github.com/JesonChou)
+- [**eternalweightlessness**](https://github.com/eternalweightlessness)
 
-except Exception as e:
-    print(f"生成失败: {e}")
+- [**421951168-cyber**](https://github.com/421951168-cyber)
+- [**JGCF-XDB**](https://github.com/JGCF-XDB)
 
-# or access fields directly from the response object
-# print(response.message.content)
-```
+同时感谢 [Ollama](https://ollama.com/) 本地大模型平台与 [PyQt](https://www.riverbankcomputing.com/software/pyqt/) 桌面框架，以及提供数据支持的在线 LLM（DeepSeek、ChatGPT）与课程参考资料。
 
-上述代码通过修改`model='deepseek-r1:8b'`这行代码中的字符串，可以修改所想要调用的模型。目前本地部署的模型有`deepseek-r1:7b`、`deepssek-r1:8b`以及`gpt-oss:20b`。运行上述代码，效果如图6所示。
+<p align="center">
+  <a href="https://github.com/JesonChou/EMC_Principle_GroupProject/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=JesonChou/EMC_Principle_GroupProject&max=100&columns=12" alt="Contributors to JesonChou/EMC_Principle_GroupProject" width="720"/>
+  </a>
+</p>
 
-<center class="half">
-    <img src="./README.assets/image-20251118111905175.png" width="320"/>
-    <img src="./README.assets/image-20251118112045456.png" width="300"/>
-</center>
-<center>图6 调用deepseek和chatGPT的对话结果</center>
+---
 
-### 5.3.3 将本地大语言模型嵌入应用程序
-
-程序通过检查本地Ollama服务状态，动态启用LLM辅助的模糊搜索功能。当检测到本地Ollama服务可用时，程序会使用LLM将用户输入的查询关键词扩展为多个相关关键词，从而提高搜索的召回率。实现方法如下：
-
-1. 在 `MainWindows` 类初始化时检查Ollama服务可用性：
-
-   ```python
-   self.ollama_available = self.check_ollama_available()
-   ```
-
-2. 实现 `check_ollama_available` 方法，检测本地Ollama服务状态：
-
-   ```python
-   def check_ollama_available(self):
-       """检查本地是否有ollama部署的大模型服务"""
-       try:
-           # 尝试调用ollama list命令检查服务状态
-           result = subprocess.run(['ollama', 'list'],
-                                   capture_output=True,
-                                   text=True,
-                                   timeout=5)
-   
-           if result.returncode == 0:
-               # 检查是否有可用的模型
-               output = result.stdout.lower()
-               if "deepseek-r1" in output or "qwen" in output or "llama" in output:
-                   return True
-               else:
-                   print("警告：ollama服务运行中，但未找到支持的模型")
-                   return False
-           else:
-               print(f"ollama服务不可用: {result.stderr}")
-               return False
-   
-       except Exception as e:
-           print(f"检查ollama服务时出错: {e}")
-           return False
-   ```
-
-3. 创建 `LLMWorker` 类作为后台线程，处理与LLM的交互：
-
-   ```python
-   class LLMWorker(QThread):
-       # 定义信号，用于将LLM生成的结果发送回主线程
-       keywords_ready = pyqtSignal(list)
-   
-       def __init__(self, user_keyword):
-           super().__init__()
-           self.user_keyword = user_keyword
-   
-       def run(self):
-           try:
-               prompt = f"""
-                   请根据用户输入的电磁兼容故障关键词，生成用于模糊搜索的关键词。
-                   示例：["传导发射", "传导发射超标", "辐射发射超标"]
-   
-                   输入关键词：
-                   "{self.user_keyword}"
-                   """
-   
-               resp = chat(
-                   model="deepseek-r1:8b",
-                   messages=[{"role": "user", "content": prompt}],
-                   stream=False
-               )
-               ...
-   
-           except Exception as e:
-               print("LLM 关键词生成失败:", e)
-               keywords = [self.user_keyword]
-   
-           # 通过信号发送结果
-           self.keywords_ready.emit(keywords)
-   ```
-
-4. 在用户点击“发送”按钮时，如果检测到Ollama可用，则启动LLM工作线程：
-
-   ```python
-   if self.ollama_available:
-       self.infoLabel.setText("正在生成搜索关键词...")
-       # 创建并启动LLM工作线程
-       ...
-   ```
-
-5. 实现 `handle_llm_keywords` 方法，处理LLM返回的关键词并执行搜索：
-
-   ```python
-   def handle_llm_keywords(self, fuzzy_keywords):
-       self.search_results_exact = []
-       seen = set()
-       # 处理LLM返回的关键词并执行搜索
-       for search_string in fuzzy_keywords:
-           for item in self.readJsonData:
-               ...
-               else:
-                   for value in item.values():
-                       ...
-       # 更新UI显示结果
-       user_input = str(self.userInputTextEdit.toPlainText())
-       self.infoLabel.setText(user_input + f"——找到 {len(self.search_results_exact)} 条匹配结果\n")
-       # 更新表格
-       for i, entry in enumerate(self.search_results_exact):
-           self.model.setItem(i, 0, QStandardItem(entry.get('故障对象', '')))
-           self.model.setItem(i, 1, QStandardItem(entry.get('故障现象', '')))
-           ...
-       self.dispTableView.setModel(self.model)
-       self.search_results_exact = []
-   ```
-
-通过上述步骤，我们就实现了本地LLM的嵌入与用户输入的模糊匹配搜索。程序启动界面与最终搜索结果界面如图7所示。
-
-<center class="half">    
-    <img src="./README.assets/llm1.png" width="250"/>
-    <img src="./README.assets/llm2.png" width="250"/>
-</center>
-
-
-<center>图7 嵌入本地LLM后的电磁兼容故障库程序</center>
-
-### 5.3.4 训练本地大模型[^9]
-
-我们参考链接`[9]`中的教程对本地大模型进行了简单的故障数据训练，使其能够根据用户输入给出更准确的电磁兼容相关关键词，进而实现更加准确的模糊语义匹配。但受限于设备条件与知识储备，我们暂时无法判断训练效果。这部分内容可以作为项目后续的完善方向。
-
-# 6.参考链接
-
-[^1]:[转换大师：免费在线 PDF、图片与媒体转换器 – MP3 MP4 JPG - ConvertTool](https://converttool.org/zh-cn/)
-[^2]: [简介 - Python教程 - 廖雪峰的官方网站](https://liaoxuefeng.com/books/python/introduction/index.html)
-[^3]: [Arduino开发ESP32-CAM模块 & 使用Python-PyQt5编写图传.exe独立程序_auduino图传-CSDN博客](https://blog.csdn.net/Zhuwany/article/details/128989573?spm=1001.2014.3001.5502)
-[^4]: [PyQt5 - 教程 - 菜鸟教程](https://www.cainiaoya.com/pyqt5/pyqt5-jiaocheng.html)
-[^5]: [30分钟内搞定！在本地电脑上部署属于你自己的大模型 - 知乎](https://zhuanlan.zhihu.com/p/1969812316003493816)
-[^6]:[本地部署大模型：Ollama安装（指定路径）和DeepSeek下载 - 知乎](https://zhuanlan.zhihu.com/p/24889002428)
-[^7]:[本地部署大模型：修改Ollama模型文件存储路径 - 知乎](https://zhuanlan.zhihu.com/p/27286614924#:~:text=本文会讲解如何修改Ollama模型文件的默认下载路径（以安装到D盘为例），前期已下载的模型文件直接剪切到这个路径下也可以实现自动调用。,第一步：右键“我的电脑”，并选择“属性”，点击“高级系统设置”，选择“环境变量”。 第二步：双击系统变量中Path那一行，点击“新建”，输入“D%3AOllama”，点击“确定”。)
-[^8]:[Ollama 教程 | 菜鸟教程](https://www.runoob.com/ollama/ollama-tutorial.html)
-[^9]:[如何给本地部署的DeepSeek投喂数据，让他更懂你 - 知乎](https://zhuanlan.zhihu.com/p/24142666586)
+<p align="center">
+  <sub>MIT — see <a href="./LICENSE">LICENSE</a></sub>
+  <br/>
+  <sub>Built by group 20 at <a href="https://github.com/JesonChou/EMC_Principle_GroupProject">JesonChou/EMC_Principle_GroupProject</a></sub>
+</p>
