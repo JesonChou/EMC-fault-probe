@@ -1,4 +1,4 @@
-# Contributing to EMC Principle Group Project
+# Contributing to EMC-fault-probe
 
 Thanks for your interest in contributing! This project follows the standard GitHub Flow workflow.
 

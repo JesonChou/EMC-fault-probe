@@ -34,6 +34,8 @@
   <img src="./README.assets/llm1.png" alt="LLM 语义扩展检索" width="360"/>
   <img src="./README.assets/llm2.png" alt="LLM 检索结果" width="360"/>
 </p>
+
+
 > [!NOTE]
 >
 > 未安装本地 Ollama 模型时，程序自动降级为普通关键词检索，全部功能不受影响。
@@ -129,16 +131,6 @@ $env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 - **Web / 移动端**。以 Windows 桌面程序为主要交付形态（支持 PyInstaller 打包 `.exe`），不做在线服务。
 - **大规模数据库系统**。JSON 文件存储已满足约 200 条词条的结构化查询需求，不引入 MySQL / MongoDB 等外部服务。
 - **商业化**。MIT协议，若有商业需求，可直接联系开发者说明。
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=JesonChou%2FEMC-fault-probe&type=date&legend=top-left">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC-fault-probe&type=date&theme=dark&legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC-fault-probe&type=date&legend=top-left" />
-    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=JesonChou/EMC-fault-probe&type=date&legend=top-left" />
-  </picture>
-</a>
 
 ## Support
 

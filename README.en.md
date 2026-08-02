@@ -34,6 +34,8 @@
   <img src="./README.assets/llm1.png" alt="LLM semantic expansion search" width="360"/>
   <img src="./README.assets/llm2.png" alt="LLM search results" width="360"/>
 </p>
+
+
 > [!NOTE]
 >
 > Without a local Ollama model the app gracefully falls back to plain keyword search — all core features keep working.
@@ -128,16 +130,6 @@ This project is deliberately scoped; the following are out of scope:
 - **Web / mobile clients.** A Windows desktop app is the primary deliverable (PyInstaller `.exe` supported); no online service.
 - **Large database systems.** JSON file storage already satisfies structured queries over ~200 entries; MySQL / MongoDB are not introduced.
 - **Commercialization.** MIT licensed; for commercial needs, contact the developers directly.
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=JesonChou%2FEMC-fault-probe&type=date&legend=top-left">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC-fault-probe&type=date&theme=dark&legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=JesonChou/EMC-fault-probe&type=date&legend=top-left" />
-    <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=JesonChou/EMC-fault-probe&type=date&legend=top-left" />
-  </picture>
-</a>
 
 ## Support
 
