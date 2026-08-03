@@ -179,12 +179,14 @@ try:
                     print("[思考过程]")
                     thinking_shown = True
                 print(msg['thinking'], end='', flush=True)
+                answer_parts.append(msg['thinking'])
             # 正式回答：思考结束后，内容进入 content 字段
             if msg.get('content'):
                 if thinking_shown:
                     print("\n───── 正式回答 ─────")
                     thinking_shown = False
                 print(msg['content'], end='', flush=True)
+                answer_parts.append(msg['content'])
         print()
 
         # 对于流式输出，response为生成器，只能用 for 循环取块
