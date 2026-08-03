@@ -179,7 +179,9 @@ try:
                     print("[思考过程]")
                     thinking_shown = True
                 print(msg['thinking'], end='', flush=True)
-                answer_parts.append(msg['thinking'])
+                # answer_parts.append(msg['thinking'])
+                # 不应该在回放给模型的时候加上thinking的部分，除了会对模型思考质量产生影响外，token的开销也是比较大的。
+                # 对于后续的持久化方案，建议会话持久化时保存thinking并显示到UI，而回放给模型时只显示正式回答的部分
             # 正式回答：思考结束后，内容进入 content 字段
             if msg.get('content'):
                 if thinking_shown:
