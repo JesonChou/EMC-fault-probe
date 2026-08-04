@@ -11,3 +11,6 @@ reasonix.toml
 
 # 向量数据库目录（可由 Embedding_Test.py 重建）
 emc_vector_db/
+
+# 多轮对话会话文件目录（由 MultiTurn_Persist_Test.py 运行时生成）
+chat_sessions/
