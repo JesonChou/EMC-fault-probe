@@ -1,10 +1,10 @@
-import json # 用于生成JSONL 每行消息的序列化/反序列化
-import secrets # 生成会话 id 的随机后端
+import json  # 用于生成JSONL 每行消息的序列化/反序列化
+import secrets  # 生成会话 id 的随机后端
 import subprocess
 import time
 import urllib.request  # 用于探测 Ollama HTTP 服务是否已就绪
-from datetime import datetime # 用于消息时间戳
-from pathlib import Path # 会话文件的路径操作
+from datetime import datetime  # 用于消息时间戳
+from pathlib import Path  # 会话文件的路径操作
 
 import chromadb
 import numpy as np
@@ -149,8 +149,8 @@ def resume_session(session_id: str) -> list[dict]:
     """
     messages = []
     with open(SESSIONS_DIR / f"{session_id}.jsonl", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
+        for raw_line in f:
+            line = raw_line.strip()
             if not line:
                 continue
             try:
@@ -212,8 +212,8 @@ def list_sessions() -> list[dict]:
     for path in sorted(SESSIONS_DIR.glob("*.jsonl")):
         info = {"session_id": "", "created_at": "", "title": "", "turns": 0}
         with open(path, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
+            for raw_line in f:
+                line = raw_line.strip()
                 if not line:
                     continue
                 try:
