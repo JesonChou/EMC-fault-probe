@@ -14,3 +14,8 @@ emc_vector_db/
 
 # 多轮对话会话文件目录（由 MultiTurn_Persist_Test.py 运行时生成）
 chat_sessions/
+
+# 覆盖率与测试报告（pytest-cov / pytest 运行时生成）
+.coverage
+coverage.xml
+junit.xml
