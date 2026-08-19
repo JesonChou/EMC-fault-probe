@@ -9,13 +9,13 @@ artifacts/
 .vscode/
 reasonix.toml
 
-# ÏòÁ¿Êı¾İ¿âÄ¿Â¼£¨¿ÉÓÉ Embedding_Test.py ÖØ½¨£©
+# å‘é‡æ•°æ®åº“ç›®å½•ï¼ˆå¯ç”± Embedding_Test.py é‡å»ºï¼‰
 emc_vector_db/
 
-# ¶àÂÖ¶Ô»°»á»°ÎÄ¼şÄ¿Â¼£¨ÓÉ MultiTurn_Persist_Test.py ÔËĞĞÊ±Éú³É£©
+# å¤šè½®å¯¹è¯ä¼šè¯æ–‡ä»¶ç›®å½•ï¼ˆç”± MultiTurn_Persist_Test.py è¿è¡Œæ—¶ç”Ÿæˆï¼‰
 chat_sessions/
 
-# ¸²¸ÇÂÊÓë²âÊÔ±¨¸æ£¨pytest-cov / pytest ÔËĞĞÊ±Éú³É£©
+# è¦†ç›–ç‡ä¸æµ‹è¯•æŠ¥å‘Šï¼ˆpytest-cov / pytest è¿è¡Œæ—¶ç”Ÿæˆï¼‰
 .coverage
 coverage.xml
 junit.xml
