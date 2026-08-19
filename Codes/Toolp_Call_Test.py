@@ -7,8 +7,7 @@ import urllib.request
 import ollama
 
 # import 工具模块即触发 @tool 装饰器 → TOOLS 注册表自动填好
-from toolp import TOOLS, tool_schemas_text, search_cases
-
+from toolp import TOOLS, tool_schemas_text
 
 ### 配置
 
@@ -135,7 +134,7 @@ def coerce_arguments(call: dict) -> dict:
     name = call.get("name")
     entry = TOOLS.get(name)
     if entry is None:
-        raise KeyError(f"工具不存在")
+        raise KeyError("工具不存在")
 
     func = entry["func"]
     sig = inspect.signature(func)

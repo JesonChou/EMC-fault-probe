@@ -95,7 +95,7 @@ def get_collection():
     client = chromadb.PersistentClient(path=str(VECTOR_DB_PATH))
     try:
         return client.get_collection(name=COLLECTION_NAME)
-    except Exception:
+    except Exception:  # noqa: BLE001 - ChromaDB exceptions vary by backend/version
         raise RuntimeError(
             f"找不到向量库 {VECTOR_DB_PATH}（集合 {COLLECTION_NAME}）。"
             "请先运行 Embedding_Test.py 完成建库。"
