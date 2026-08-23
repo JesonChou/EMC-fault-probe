@@ -5,14 +5,14 @@
 >
 > **项目愿景**：构建一个基于 **RAG（检索增强生成）与长期记忆系统**的电磁兼容故障库 **AGENT** —— 沿"数据来源 → 知识加工 → 结构化存储 → 功能迭代"主线，将分散、非结构化的 EMC 故障资料沉淀为结构化、可复用的故障知识体系，由 LLM 驱动实现智能查询、故障诊断辅助、知识动态增量构建与更新提示。
 >
-> **当前进度**：故障库基础版已完成 —— 从文献、网页与在线 LLM 三渠道收集数据，经清洗、LLM 结构化提取与合并去重，入库约 200 条"故障—原因—方案"词条；PyQt6 桌面程序实现关键词检索、本地 Ollama LLM 查询扩展与 Excel 导出。基于 ChromaDB 的 RAG 语义检索已有实验实现（见`Codes/Embedding_Test.py` 与 `Codes/emc_vector_db/`）；AGENT 化（长期记忆、诊断辅助、增量入库）为后续迭代方向。
+> **当前进度**：故障库基础版已完成 —— 从文献、网页与在线 LLM 三渠道收集数据，经清洗、LLM 结构化提取与合并去重，当前发布数据包含 151 条去重词条；PyQt6 查询程序和 ChromaDB RAG 实验作为实验产物保留。向量库生成脚本位于 `experiments/rag/embedding_test.py`，其输出位于 `experiments/rag/emc_vector_db/`；Web 前端、Python 后端和 Agent Runtime 正在按新架构重构。
 
 <p align="center">
   <strong>简体中文</strong>
   &nbsp;·&nbsp;
   <a href="./README.en.md">English</a>
   &nbsp;·&nbsp;
-  <a href="./docs/项目过程与细节记录.md">项目过程与细节记录</a>
+  <a href="./docs/research/项目过程与细节记录.md">项目过程与细节记录</a>
 </p>
 
 <p align="center">
@@ -46,28 +46,27 @@
 
 ```powershell
 python -m pip install -r requirements.txt
-cd Codes
-python EMC_Fault_Database_Test.py
+ python experiments/desktop/pyqt6_app/EMC_Fault_Database_Test.py
 ```
 
 > [!NOTE]
 >
-> 程序仅加载发布数据文件 `data_1.json` 与 `data_2.json`，并在加载时按完整词条去重。`12.29.json` 是 `data_2.json` 的历史重复副本，仅供追溯，不参与运行时检索。
+> 实验程序加载 `data/published/v1/data_1.json` 与 `data/published/v1/data_2.json`，并在加载时按完整词条去重。`data/processed/` 中的历史文件仅供数据处理追溯，不参与发布程序运行。
 
 运行测试：
 
 ```powershell
 python -m pip install -r requirements-dev.txt pytest
-python -m pytest tests/ -v              # 应用级测试（仓库根目录）
-cd Codes; python -m pytest tests/ -v    # 代码级测试
+ python -m pytest experiments/desktop/pyqt6_app/tests/ -v
+ python -m pytest packages/emc-core-py/tests/ -v
 ```
 
 打包 Windows 可执行文件（输出到未跟踪的 `artifacts/`，避免覆盖历史发布文件）：
 
 ```powershell
 python -m pip install -r requirements-dev.txt
-cd Codes
-pyinstaller --clean --noconfirm --distpath ..\artifacts\dist --workpath ..\artifacts\build EMC_Fault_Database_Test.spec
+ cd experiments/desktop/pyqt6_app
+ pyinstaller --clean --noconfirm --distpath ..\..\..\artifacts\dist --workpath ..\..\..\artifacts\build EMC_Fault_Database_Test.spec
 ```
 
 ## Configuration
@@ -87,7 +86,7 @@ ollama run deepseek-r1:8b
 $env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 ```
 
-程序启动时自动探测 Ollama 服务与可用模型；检测到后将用户输入交由 LLM 扩展为多个相关关键词再检索，提高模糊查询召回率。模型训练实验与提示词细节见 [docs/项目过程与细节记录.md](./docs/项目过程与细节记录.md)。
+程序启动时自动探测 Ollama 服务与可用模型；检测到后将用户输入交由 LLM 扩展为多个相关关键词再检索，提高模糊查询召回率。模型训练实验与提示词细节见 [docs/research/项目过程与细节记录.md](./docs/research/项目过程与细节记录.md)。
 
 ## What makes it different
 
@@ -110,7 +109,8 @@ $env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 
 ## Documentation
 
-- [**项目过程与细节记录**](./docs/项目过程与细节记录.md) — 完整开发过程：数据收集、预处理、LLM 提取、故障库构建、程序实现与代码讲解
+- [**项目过程与细节记录**](./docs/research/项目过程与细节记录.md) — 完整开发过程：数据收集、预处理、LLM 提取、故障库构建、程序实现与代码讲解
+- [**Agent 工具调用记录**](./docs/research/agent-tool-calling.md) — Prompt 工具调用与原生工具调用实验
 - [**README.en.md**](./README.en.md) — English version
 - [**CONTRIBUTING.md**](./CONTRIBUTING.md) — 贡献指南（GitHub Flow）
 - [**LICENSE**](./LICENSE) — MIT License
@@ -120,15 +120,15 @@ $env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 本项目按社区规范开放协作：
 
 - 报告 Bug 或功能建议 → [GitHub Issues](https://github.com/JesonChou/EMC-fault-probe/issues)
-- 提交代码 → 遵循 [CONTRIBUTING.md](./CONTRIBUTING.md)：从 `main` 创建 `feat/xxx` 分支，完成后提交 Pull Request
-- 代码质量门槛 → `ruff check Codes/` 通过，新功能附带测试；CI 在 Ubuntu / Windows 上对 Python 3.11 / 3.12 自动执行 lint 与 pytest
+- 提交代码 → 遵循 [CONTRIBUTING.md](./CONTRIBUTING.md)：从 `main` 创建功能分支，完成后提交 Pull Request
+- 代码质量门槛 → `ruff check apps packages experiments scripts` 通过，新功能附带测试；CI 在 Ubuntu / Windows 上执行 lint 与 pytest
 
 ## Non-goals
 
 本项目定位明确，以下内容不在范围内：
 
 - **多语言语料**。当前仅收录中文资料；英文 EMC 语料可作为后续扩展方向。
-- **Web / 移动端**。以 Windows 桌面程序为主要交付形态（支持 PyInstaller 打包 `.exe`），不做在线服务。
+- **移动端**。当前目标包含 Web 前端、Python 后端和 Windows 桌面客户端；移动端暂不在范围内。
 - **大规模数据库系统**。JSON 文件存储已满足约 200 条词条的结构化查询需求，不引入 MySQL / MongoDB 等外部服务。
 - **商业化**。MIT协议，若有商业需求，可直接联系开发者说明。
 

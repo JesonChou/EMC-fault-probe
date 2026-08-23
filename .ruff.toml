@@ -10,12 +10,13 @@ ignore = ["E501", "RUF001", "RUF002", "RUF003"]
 
 [lint.per-file-ignores]
 # ---- 历史遗留代码：风格问题已存在，暂不阻塞 CI，后续单独清理 ----
-"Codes/EMC_Fault_Database.py" = ["UP009", "UP004"]
-"Codes/EMC_Fault_Database_Test.py" = ["I001", "BLE001", "SIM102", "PLW1510"]
-"Codes/LLMTest.py" = ["I001", "BLE001"]
-"Codes/emc_dict.py" = ["UP009", "B033"]
-"Codes/JSONFileProcessTest.py" = ["SIM102", "BLE001", "UP015"]
-"Codes/Embedding_Test.py" = ["I001", "E401", "SIM115"]
+"experiments/desktop/pyqt6_app/EMC_Fault_Database.py" = ["UP009", "UP004"]
+"experiments/desktop/pyqt6_app/EMC_Fault_Database_Test.py" = ["I001", "BLE001", "SIM102", "PLW1510"]
+"experiments/ollama/llm_test.py" = ["I001", "BLE001"]
+"packages/emc-core-py/src/emc_core/retrieval/emc_dict.py" = ["UP009", "B033"]
+"packages/emc-core-py/src/emc_core/retrieval/json_search.py" = ["SIM102", "BLE001", "UP015"]
+"experiments/rag/embedding_test.py" = ["I001", "E401", "SIM115"]
 
 # ---- 测试文件：sys.path 调整后的导入属标准测试模式 ----
-"Codes/tests/*.py" = ["E402"]
+"packages/emc-core-py/tests/*.py" = ["E402"]
+"experiments/desktop/pyqt6_app/tests/*.py" = ["E402", "I001"]

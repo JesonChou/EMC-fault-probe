@@ -28,7 +28,7 @@ jobs:
       - name: Install ruff
         run: pip install ruff
       - name: Ruff check
-        run: ruff check Codes/
+        run: ruff check apps packages experiments scripts
 
   test:
     name: Test (py${{ matrix.python-version }} / ${{ matrix.os }})
@@ -41,9 +41,6 @@ jobs:
         python-version: ["3.11", "3.12"]
     env:
       QT_QPA_PLATFORM: offscreen # PyQt6 GUI 无显示环境
-    defaults:
-      run:
-        working-directory: Codes
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v7
@@ -59,24 +56,24 @@ jobs:
           sudo apt-get install -y libegl1 libgl1 libxcb-cursor0 libxkbcommon-x11-0
       - name: Install dependencies
         run: |
-          pip install -r ../requirements.txt
+          pip install -r requirements.txt
           pip install pytest pytest-cov
       - name: Syntax check all scripts
-        # Embedding_Test.py / LLMTest.py 依赖本机 Ollama 服务，CI 不可用，
+        # RAG/Ollama 实验依赖本机 Ollama 服务，CI 不可用，
         # 故仅编译校验语法，不执行。
-        run: python -m compileall -q .
+        run: python -m compileall -q apps packages experiments scripts tests
       - name: Unit tests with coverage
         # 注意：Windows runner 默认 shell 是 PowerShell，不支持 bash 的
         # 反斜杠续行，命令必须写为单行
-        run: python -m pytest tests/ -v --cov=. --cov-report=term-missing --cov-report=xml:coverage.xml --junitxml=junit.xml
+        run: python -m pytest packages/emc-core-py/tests/ experiments/desktop/pyqt6_app/tests/ -v --cov=packages/emc-core-py/src --cov-report=term-missing --cov-report=xml:coverage.xml --junitxml=junit.xml
       - name: GUI module import smoke test
-        run: python -c "import EMC_Fault_Database; print('GUI module import OK')"
+        run: python -c "import sys; sys.path.insert(0, 'experiments/desktop/pyqt6_app'); import main; print('PyQt6 experiment import OK')"
       - name: Upload test reports
         if: always() # 测试失败也保留报告供排查
         uses: actions/upload-artifact@v4
         with:
           name: test-reports-${{ matrix.os }}-py${{ matrix.python-version }}
           path: |
-            Codes/junit.xml
-            Codes/coverage.xml
+            junit.xml
+            coverage.xml
           if-no-files-found: ignore

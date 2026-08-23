@@ -15,14 +15,15 @@ Thanks for your interest in contributing! This project follows the standard GitH
 4. Run linting and tests locally before pushing:
 
    ```powershell
-   ruff check Codes/
-   python -m pytest tests/ -v
+   ruff check apps packages experiments scripts
+   python -m pytest packages/emc-core-py/tests/ -v
+   python -m pytest experiments/desktop/pyqt6_app/tests/ -v
    ```
 
 ## Pull Request Checklist
 
 - [ ] Branch is created from the latest `main`
-- [ ] Code passes `ruff check Codes/`
+- [ ] Code passes `ruff check apps packages experiments scripts`
 - [ ] New features are covered by tests
 - [ ] Commit messages follow the Conventional Commits style (e.g. `feat:`, `fix:`, `docs:`, `test:`)
 - [ ] README is updated if user-facing behavior changed

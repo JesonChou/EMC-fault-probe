@@ -9,11 +9,19 @@ artifacts/
 .vscode/
 reasonix.toml
 
-# 向量数据库目录（可由 Embedding_Test.py 重建）
-emc_vector_db/
+# 实验向量数据库（可由 experiments/rag/embedding_test.py 重建）
+experiments/rag/emc_vector_db/
 
-# 多轮对话会话文件目录（由 MultiTurn_Persist_Test.py 运行时生成）
-chat_sessions/
+# 运行时会话和工作区状态
+data/runtime/sessions/*
+data/runtime/workspaces/*
+data/runtime/logs/*
+!data/runtime/sessions/.gitkeep
+!data/runtime/workspaces/.gitkeep
+!data/runtime/logs/.gitkeep
+
+# 实验脚本在其工作目录产生的日志
+experiments/**/ollama_serve.log
 
 # 覆盖率与测试报告（pytest-cov / pytest 运行时生成）
 .coverage
