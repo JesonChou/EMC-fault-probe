@@ -47,9 +47,9 @@ Tool calling 的实现方式主要有两种，一种是模型原生工具调用�
 
 ### 2.1.1 `toolp.py` 工具定义
 
-1.  TOOLS 工具注册表：
+1.  `TOOLS` 工具注册表：
 
-    将工具注册在 TOOLS 这一变量中。TOOLS 的数据类型为一个 `dict`，内部嵌套一个 `dict`，其结构为：
+    将工具注册在 `TOOLS` 这一变量中。`TOOLS` 的数据类型为一个 `dict`，内部嵌套一个 `dict`，其结构为：
 
     ```python
     TOOLS = {
@@ -70,7 +70,7 @@ Tool calling 的实现方式主要有两种，一种是模型原生工具调用�
 
     这样将每个函数注册进注册表，方便模型返回参数进行查表。
 
-2.  将工具函数注册进 TOOLS 注册表：
+2.  将工具函数注册进 `TOOLS` 注册表：
 
     在这里，我们需要一个装饰器来将工具函数注册进注册表。函数定义如下：
 
@@ -162,7 +162,7 @@ Tool calling 的实现方式主要有两种，一种是模型原生工具调用�
 
 3.  转换注册表为字符串：
 
-    将工具注册好后，我们需要将 TOOLS 中的 `dict` 数据类型转换为字符串，然后发送给模型。这就需要下面这个函数：
+    将工具注册好后，我们需要将 `TOOLS` 中的 `dict` 数据类型转换为字符串，然后发送给模型。这就需要下面这个函数：
 
     ```python
     def tool_schemas_text() -> str:
@@ -428,4 +428,452 @@ Tool calling 的实现方式主要有两种，一种是模型原生工具调用�
 
 ## 2.2 Ollama 原生工具调用
 
-`//TODO`
+在这一节，我们实现方式 A 的路径。
+
+大模型 API 的核心是一个消息列表，在人阅读的时候，它是一个类似 JSON 的结构化字段。在 2.1 节中我们可以看到，程序中， `message` 的数据类型为 `dict`，解析时通常将其解析为 JSON 文本。消息列表中的每个消息都有一个角色标识，用 `role` 字段来说明，大模型根据 `role` 指定的角色来理解每条消息的来源和含义。
+
+目前的主流大模型基本都支持四个字段的消息，分别为：
+
+-   `sysyem`：系统提示词，定义 Agent 的身份、行为规则和约束条件。模型将其视为最高优先级的指令，放在一个对话消息列表的最前面。在 2.1 节中，我们将自己定义的工具说明就放入了 system prompt。
+-   `user`：来自用户的消息，是 LLM 需要响应的请求。
+-   `assistant`：模型之前的回复，包括文本回复和工具调用请求。在多轮对话中，之前的 `assistant` 消息会被放回消息列表，让模型知道自己之前说了什么。
+-   `tool`：工具结果，Agent 框架执行工具后，将结果放在 `tool` 字段中返回给模型。每条 `tool` 消息通过 `tool_call_id` 与对应的工具调用请求关联。
+
+在原生调用中，工具定义 `tools` 作为请求的独立字段而非消息，告诉模型可以用哪些工具，工具接受什么参数。
+
+在这一节中，工具定义在 [Codes/tooln.py](../Codes/tooln.py)，对于工具的调用测试放在[Codes/Tooln_Call_Test.py](../Codes/Tooln_Call_Test.py)。文件命名中的 `n` 表示 Native，即原生工具调用。
+
+### 2.2.1 `tooln.py` 工具定义
+
+1.  `TOOLS` 工具注册表
+
+    与 Prompt 调用一样，我们仍然要声明一个 `TOOLS`  变量，用于存储工具函数的注册表。但是和自写协议不同，目前的主流模型 API 对于工具描述的 Schema 结构要求如下：
+
+    ```python
+    const tools = [
+      {
+        type: 'function',
+        function: {
+          name: 'get_temperature',
+          description: 'Get the current temperature for a city',
+          parameters: {
+            type: 'object',
+            required: ['city'],
+            properties: {
+              city: { type: 'string', description: 'The name of the city' },
+            },
+          },
+        },
+      },
+    ]
+    ```
+
+    可以发现，`tools` 这个 `const` 变量采用了若干层嵌套的 `dict` 结构：`tools` 本身作为一层，包含两个字段，分别为 `type` 和 `function`，`type` 的类型为 `str`，`function` 的类型还是一个 `dict`；而 `function` 这个 `dict` 内部的 `name` 和 `description` 字段还是 `str` 类型，`parameters` 仍然是一个 `dict`。对于函数注册表来说，我们可以先去掉外层的 `tools` 这个 `dict`，只注册内层的
+
+    ```python
+    {
+      name: 'get_temperature',
+      description: 'Get the current temperature for a city',
+      parameters: {
+        type: 'object',
+        required: ['city'],
+        properties: {
+          city: { type: 'string', description: 'The name of the city' },
+        },
+      },
+    }
+    ```
+
+    这个 `dict` 是针对单个工具的信息。我们可以将上述要求的信息注册到注册表 `TOOLS` 当中。注意，我们的 `TOOLS` 注册表是一个内部的注册表，所以可以不严格按照 Ollama 要求的 `tools` 参数来设计；但这样的话我们需要一个函数来将内部注册表的格式转化为 Ollama 要求的格式。这个放在后面进行，我们先处理 `TOOLS` 注册表的结构。
+
+    参考之前的设计，`TOOLS` 注册表可以设计为：
+
+    ```python
+    {
+        'search_cases': {
+            "name": search_cases,
+            "description": discription,
+            "parameters": parameters,
+            "func": function
+        },
+        'get_weather': {
+            "name": get_weather,
+            "description": discription,
+            "parameters": parameters,
+            "func": function
+        },
+        ...
+    }
+    ```
+
+    其中 `“name”`、`“discription”` 为 `str`，`“parameters”` 为一个 `dict`，是函数的 JSON Schema，`“func”` 是可调用函数本身。我们可以在这个注册表里将函数的各种信息和函数本身注册成一个词典，因此，`TOOLS` 在声明的时候，可以声明为两层嵌套的 `dict`：
+
+    ```python
+    TOOLS = dict[str, dict[str, Any]] = {}
+    ```
+
+    外层 `dict` 的第一个参数 `str` 即为 `‘search_cases’` 这样的函数名字符串，内层的 `dict` 为后面的对于函数名的各种信息，存储了上述四个字段的信息。
+
+2.  将函数信息注册到 `TOOLS` 注册表中：
+
+    和 2.1 节中一样，我们将函数信息注册到内部注册表中。使用 `@tool` 的语法糖，将我们定义的函数的各种信息注册到 `TOOLS` 中：
+
+    ```python
+    @tool(
+        "search_cases",
+        "在电磁兼容故障库中检索故障词条。当用户描述故障现象、询问故障原因或解决方案时调用。"
+        "返回匹配词条，每条含故障对象/故障现象/故障原因/解决方案/故障等级/发生频率。",
+        parameters = SEARCH_CASES_PARAMETERS,
+    )
+    def search_cases(query: str, top_k: int = DEFAULT_TOP_K) -> str:
+        ...
+    ```
+
+    这个写法等价于
+
+    ```python
+    search_cases = tool("search_cases",description,parameters)(searche_cases)
+    ```
+
+    将工具函数原路返回，同时将工具的信息注册到注册表 `TOOLS` 中。具体的执行原理可以参考 2.1 节，有详细的说明。
+
+    `parameters` 字段是工具的 Schema，按照 Ollama 原生工具调用的格式，`parameters` 应该写成如下格式：
+
+    ```python
+    SEARCH_CASES_PARAMETERS = {
+        'type': 'object',
+        'required': ['query', 'top_k'],
+        'properties': {
+            'query': {
+                'type': 'string',
+                'description': (
+                    '用户的电磁兼容故障描述或检索关键词，'
+                    '例如：辐射发射超标'
+                ),
+            },
+            'top_k': {
+                'type': 'integer',
+                'description': '返回最相关的故障条目数量',
+                'minimum': 1,
+                'maximum': 10,
+            },
+        },
+    }
+    ```
+
+    完整的 `TOOLS` 结构为：
+
+    ```python
+    {
+      "search_cases": {
+        "name": "search_cases",
+        "description": "在电磁兼容故障库中检索故障词条。当用户描述故障现象、询问故障原因或解决方案时调用。返回匹配词条，每条含故障对象/故障现象/故障原因/解决方案/故障等级/发生频率。",
+        "parameters": {
+          "type": "object",
+          "required": [
+            "query",
+            "top_k"
+          ],
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "用户的电磁兼容故障描述或检索关键词，例如：辐射发射超标"
+            },
+            "top_k": {
+              "type": "integer",
+              "description": "返回最相关的故障条目数量",
+              "minimum": 1,
+              "maximum": 10
+            }
+          }
+        },
+        "func": "<function search_cases>"
+      }
+    }
+    ```
+
+    我们接下来只需要将其转换为 Ollama 原生工具的调用格式即可。
+
+3.  将注册表 `TOOLS` 中的信息转化成 Ollama 原生工具调用的格式：
+
+    ```python
+    def native_tools() -> list[dict[str, Any]]:
+        """
+        将内部工具注册表转化为 Ollama 原生 tools 的格式
+        """
+        return [
+            {
+                'type': 'function',
+                'function':{
+                    'name': entry['name'],
+                    'description': entry['description'],
+                    # 防止 SDK 或者后续代码修改原始 Schema
+                    'parameters': deepcopy(entry['parameters']),
+                }
+            }
+            for entry in TOOLS.values()
+        ]
+    ```
+
+    这样我们就将 `TOOLS` 中注册的信息转化为 Ollama 原生工具调用的格式了。输出结果如下：
+
+    ```python
+    [
+      {
+        "type": "function",
+        "function": {
+          "name": "search_cases",
+          "description": "在电磁兼容故障库中检索故障词条。当用户描述故障现象、询问故障原因或解决方案时调用。返回匹配词条，每条含故障对象/故障现象/故障原因/解决方案/故障等级/发生频率。",
+          "parameters": {
+            "type": "object",
+            "required": [
+              "query",
+              "top_k"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "用户的电磁兼容故障描述或检索关键词，例如：辐射发射超标"
+              },
+              "top_k": {
+                "type": "integer",
+                "description": "返回最相关的故障条目数量",
+                "minimum": 1,
+                "maximum": 10
+              }
+            }
+          }
+        }
+      }
+    ]
+    ```
+
+4.  其余的相关函数请参考文件内部定义，此处不再赘述。
+
+### 2.2.2 `Tooln_Call_Test.py` Ollama 原生工具调用测试
+
+`Tooln_Call_Test.py` 负责测试 Ollama 的原生工具调用流程。与 2.1 节的 Prompt 协议不同，这里不需要从模型文本中寻找工具调用 JSON，而是直接读取 Ollama SDK 返回的 `ChatResponse` 对象中的 `message.tool_calls` 字段。
+
+1.  配置模型、生成参数和原生工具列表：
+
+    文件开头定义了模型、最大工具调用轮数、是否启用思考模式，以及 Ollama 的生成参数：
+
+    ```python
+    MODEL = "qwen3.5:9b-q4_K_M"
+    MAX_ITER = 5
+    THINK = True
+
+    OLLAMA_OPTIONS = {
+        "temperature": 0,
+        "seed": 42,
+    }
+    ```
+
+    `temperature=0` 可以减少随机性，`seed=42` 可以在模型和运行环境允许的情况下让两种工具调用方式尽量使用相同的生成条件，方便对比 Prompt 调用和 Native 调用的差异。`THINK` 用来控制 Ollama 是否启用思考过程，`MAX_ITER` 则用于防止模型持续调用工具而不生成最终回答。
+
+    工具注册模块导入完成后，再将内部注册表转换成 Ollama 所需要的原生格式：
+
+    ```python
+    from tooln import TOOLS, native_tools
+
+    NATIVE_TOOLS = native_tools()
+    ```
+
+    `native_tools()` 在工具函数已经通过 `@tool` 注册进 `TOOLS` 后执行，因此可以读取完整的工具描述。该函数返回的结果会作为 `ollama.chat()` 的 `tools` 参数传入，而不是拼接进 system prompt。
+
+2.  Ollama 服务管理：
+
+    Ollama 服务管理的基本思路与 2.1.2 节相同，但这里将日志文件固定放在当前脚本目录下：
+
+    ```python
+    APP_DIR = Path(__file__).resolve().parent
+    log_path = APP_DIR / "ollama_serve.log"
+    ```
+
+    `is_ollama_serving()` 通过访问 `http://127.0.0.1:11434/api/tags` 检查服务，并且只有响应状态码为 `200` 时才认为服务正常：
+
+    ```python
+    def is_ollama_serving() -> bool:
+        try:
+            with urllib.request.urlopen(
+                "http://127.0.0.1:11434/api/tags",
+                timeout=2,
+            ) as response:
+                return response.status == 200
+        except OSError:
+            return False
+    ```
+
+    如果 Ollama 已经运行，`start_ollama_background()` 返回 `None`；否则启动后台 `ollama serve`，等待服务就绪后返回本次启动的进程对象。测试结束时，只有返回值不为 `None` 时才终止进程，从而避免误关闭用户原本已经运行的 Ollama 服务。
+
+3.  原生工具调用的返回结构：
+
+    Native Tool Calling 的关键区别在于，工具调用不是模型文本的一部分，而是 SDK 返回对象中的结构化字段。调用模型时，需要将 `NATIVE_TOOLS` 传给 `tools` 参数：
+
+    ```python
+    response: ChatResponse = ollama.chat(
+        model=MODEL,
+        messages=messages,
+        tools=NATIVE_TOOLS,
+        stream=False,
+        think=THINK,
+        options=OLLAMA_OPTIONS,
+    )
+
+    assistant_message = response.message
+    tool_calls = list(assistant_message.tool_calls or [])
+    ```
+
+    `assistant_message.content` 是模型生成的普通文本，`assistant_message.tool_calls` 是工具调用列表。模型可能一次返回零个、一个或多个工具调用，因此不能只处理列表中的第一个元素。
+
+    处理完成后，必须将完整的 `assistant_message` 放回消息列表：
+
+    ```python
+    messages.append(assistant_message)
+    ```
+
+    这里不能只保存 `assistant_message.content`。如果该消息包含工具调用，那么 `tool_calls` 字段也是下一轮对话的重要上下文；只保存文本会使模型无法将后续的 `role="tool"` 消息与之前的工具请求对应起来。
+
+4.  转换 Native Tool Call 的参数：
+
+    原生工具调用返回的参数通常已经是一个 `Mapping`，但为了兼容部分旧版本 SDK，也可能返回 JSON 字符串。因此 `execute_tool_call()` 会先判断参数类型：
+
+    ```python
+    raw_arguments = tool_function.arguments or {}
+
+    if isinstance(raw_arguments, str):
+        raw_arguments = json.loads(raw_arguments)
+
+    if not isinstance(raw_arguments, Mapping):
+        raise TypeError(
+            "tool arguments 必须是 JSON object。"
+        )
+    ```
+
+    `coerce_arguments()` 再根据工具函数的签名和类型注解完成参数转换。由于文件使用了 `from __future__ import annotations`，函数注解可能以字符串形式保存，所以代码使用 `get_type_hints()` 解析真实类型：
+
+    ```python
+    try:
+        type_hints = get_type_hints(function)
+    except (NameError, TypeError):
+        type_hints = {}
+    ```
+
+    当参数注解为 `int`、`float` 或 `str` 时，函数分别尝试执行 `int(value)`、`float(value)` 或 `str(value)`；缺少的可选字段则使用函数签名中的默认值。转换失败时保留原值，让实际工具函数产生更具体的错误信息。
+
+5.  执行工具并将异常转换为结果文本：
+
+    原生工具调用对象的工具名和参数分别位于 `tool_call.function.name` 与 `tool_call.function.arguments`。执行器首先查找工具注册表，再调用对应的 Python 函数：
+
+    ```python
+    tool_function = tool_call.function
+    tool_name = tool_function.name
+    entry = TOOLS.get(tool_name)
+
+    if entry is None:
+        return f"[工具调用错误] 未注册工具：{tool_name}"
+
+    arguments = coerce_arguments(
+        tool_name=tool_name,
+        raw_arguments=raw_arguments,
+    )
+    result = entry["func"](**arguments)
+    ```
+
+    工具不存在、参数格式错误以及工具内部异常，都会被转换为字符串返回给模型：
+
+    ```python
+    except Exception as exc:  # noqa: BLE001
+        return (
+            f"[工具 {tool_name} 执行异常] "
+            f"{type(exc).__name__}: {exc}"
+        )
+    ```
+
+    这样工具执行失败不会直接终止 Agent 循环，模型可以根据错误文本决定重新调用、放弃调用或直接向用户解释原因。
+
+6.  Agent 主循环和多工具调用：
+
+    `run_agent()` 的主流程如下：
+
+    ```text
+    用户问题
+      ↓
+    ollama.chat(tools=NATIVE_TOOLS)
+      ↓
+    读取 response.message.tool_calls
+      ├─ 列表为空 → 返回 assistant.content 作为最终回答
+      └─ 列表非空
+            ↓
+         执行列表中的每个 ToolCall
+            ↓
+         追加 role="tool" 消息
+            ↓
+         再次调用模型
+    ```
+
+    核心循环如下：
+
+    ```python
+    for step in range(1, max_iter + 1):
+        response = ollama.chat(
+            model=MODEL,
+            messages=messages,
+            tools=NATIVE_TOOLS,
+            stream=False,
+            think=THINK,
+            options=OLLAMA_OPTIONS,
+        )
+
+        assistant_message = response.message
+        tool_calls = list(
+            assistant_message.tool_calls or []
+        )
+        messages.append(assistant_message)
+
+        if not tool_calls:
+            return assistant_message.content or "", messages
+
+        for tool_call in tool_calls:
+            result = execute_tool_call(tool_call)
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_name": tool_call.function.name,
+                    "content": result,
+                }
+            )
+    ```
+
+    一个 `assistant` 消息可能同时包含多个工具调用，所以代码使用 `for tool_call in tool_calls` 逐个执行，并将每个结果分别回填。与 2.1 节由程序自行定义 JSON 协议不同，Native 调用不需要 `parse_tool_call()`；工具调用名称、参数以及消息角色都由 Ollama SDK 的结构化返回值提供。
+
+7.  测试用例和资源清理：
+
+    测试入口使用四个问题观察模型在不同场景下的行为：
+
+    ```python
+    TEST_QUERIES = [
+        "辐射发射超标怎么办？",
+        "你是什么模型？",
+        "我的设备在开机时出现异常，怎么排查？",
+        "请查询一下当前天气",
+    ]
+    ```
+
+    第一个问题用于验证模型是否能够调用 `search_cases`；第二个问题用于验证不需要工具时是否直接生成文本；第三个问题用于观察模糊故障描述下的工具选择；第四个问题用于观察模型面对当前工具列表无法直接提供的天气信息时，是否能够合理回答。
+
+    主程序使用 `try...finally` 管理 Ollama 服务：测试开始前确保服务可用，测试结束后只关闭本次脚本启动的服务。Native Tool Calling 的完整链路可以概括为：
+
+    ```text
+    Python 工具注册
+      ↓
+    native_tools() 转换 Schema
+      ↓
+    ollama.chat(tools=NATIVE_TOOLS)
+      ↓
+    SDK 返回 message.tool_calls
+      ↓
+    Python 执行工具并回填 role="tool"
+      ↓
+    模型生成最终回答
+    ```
