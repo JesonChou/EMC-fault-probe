@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">EMC fault probe application icon</title>
+  <desc id="desc">A restrained electromagnetic orbit hides E field traces, paired M flux lobes, and a C-shaped shield around three diagnostic records.</desc>
+
+  <defs>
+    <radialGradient id="fieldCore" cx="48%" cy="45%" r="65%">
+      <stop offset="0" stop-color="#096FC5"/>
+      <stop offset="1" stop-color="#004B8E"/>
+    </radialGradient>
+    <filter id="tileShadow" x="0" y="0" width="1024" height="1024" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="20" stdDeviation="22" flood-color="#002A50" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Official BUAA blue: RGB 0 91 172. -->
+  <rect x="52" y="52" width="920" height="920" rx="214" fill="#005BAC" filter="url(#tileShadow)"/>
+  <rect x="77" y="77" width="870" height="870" rx="190" fill="none" stroke="#D6F5FF" stroke-opacity="0.18" stroke-width="4"/>
+
+  <!-- A quiet inner field chamber gives the line mark visual focus. -->
+  <circle cx="512" cy="512" r="332" fill="url(#fieldCore)" opacity="0.68"/>
+  <circle cx="512" cy="512" r="332" fill="none" stroke="#C6F2FF" stroke-opacity="0.1" stroke-width="4"/>
+
+  <!-- C: two open, concentric shielding / magnetic-field trajectories. -->
+  <path d="M758 316C695 254 616 224 512 224C352 224 232 350 232 512C232 674 352 800 512 800C616 800 695 770 758 708"
+        fill="none" stroke="#F4FBFF" stroke-width="34" stroke-linecap="round"/>
+  <path d="M733 350C678 299 608 275 512 275C381 275 282 380 282 512C282 644 381 749 512 749C608 749 678 725 733 674"
+        fill="none" stroke="#7FE8FF" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- Small directional cuts turn the C into a circulating flux path. -->
+  <path d="M650 246L680 247L661 271Z" fill="#7FE8FF"/>
+  <path d="M661 753L680 777L650 778Z" fill="#7FE8FF"/>
+
+  <!-- E: the left arc is the shared electrode; three field traces project inward. -->
+  <g fill="none" stroke="#7FE8FF" stroke-width="16" stroke-linecap="round">
+    <path d="M261 414C312 420 352 400 404 378"/>
+    <path d="M246 512H416"/>
+    <path d="M261 610C312 604 352 624 404 646"/>
+  </g>
+  <g fill="#D9F8FF">
+    <circle cx="404" cy="378" r="10"/>
+    <circle cx="416" cy="512" r="10"/>
+    <circle cx="404" cy="646" r="10"/>
+  </g>
+
+  <!-- M: two coupled magnetic-flux lobes share a central cusp. -->
+  <path d="M379 646C401 574 384 436 439 400C481 372 496 477 512 522C528 477 543 372 585 400C640 436 623 574 645 646"
+        fill="none" stroke="#F4FBFF" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M411 632C427 566 413 468 450 439C478 417 496 509 512 550C528 509 546 417 574 439C611 468 597 566 613 632"
+        fill="none" stroke="#7FE8FF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="512" cy="550" r="8" fill="#7FE8FF"/>
+
+  <!-- Three compact records sit in the shield opening: library + measured spectrum bins. -->
+  <g stroke="#7FE8FF" stroke-width="8">
+    <rect x="690" y="442" width="126" height="39" rx="19.5" fill="#00427E"/>
+    <rect x="690" y="493" width="126" height="39" rx="19.5" fill="#00427E"/>
+    <rect x="690" y="544" width="126" height="39" rx="19.5" fill="#00427E"/>
+  </g>
+
+  <!-- One anomalous record; the only warm accent in the system. -->
+  <path d="M706 512H726L737 499L751 527L763 512H798"
+        fill="none" stroke="#FFB547" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="798" cy="512" r="6" fill="#FFB547"/>
+</svg>
