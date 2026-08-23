@@ -7,10 +7,10 @@
 import sys
 from pathlib import Path
 
-CODES_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(CODES_DIR))
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PACKAGE_ROOT / "src"))
 
-from emc_dict import EMC_DICT
+from emc_core.retrieval.emc_dict import EMC_DICT
 
 
 def test_emc_dict_non_empty():

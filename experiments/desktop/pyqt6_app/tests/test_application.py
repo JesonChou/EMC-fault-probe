@@ -9,12 +9,13 @@ from unittest.mock import patch
 
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-CODE_DIR = PROJECT_ROOT / "Codes"
-sys.path.insert(0, str(CODE_DIR))
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
+APP_DIR = PROJECT_ROOT / "experiments" / "desktop" / "pyqt6_app"
+DATA_DIR = PROJECT_ROOT / "data" / "published" / "v1"
+sys.path.insert(0, str(APP_DIR))
 
-from PyQt6.QtWidgets import QApplication, QFileDialog  # noqa: E402
-import EMC_Fault_Database_Test as application  # noqa: E402
+import EMC_Fault_Database_Test as application
+from PyQt6.QtWidgets import QApplication, QFileDialog
 
 
 class ApplicationTests(unittest.TestCase):
@@ -23,7 +24,7 @@ class ApplicationTests(unittest.TestCase):
         cls.qt_app = QApplication.instance() or QApplication([])
 
     def setUp(self):
-        self.window = application.MainWindows(data_dir=CODE_DIR)
+        self.window = application.MainWindows(data_dir=DATA_DIR)
 
     def tearDown(self):
         self.window.close()

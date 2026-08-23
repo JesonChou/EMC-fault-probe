@@ -11,8 +11,8 @@ import chromadb
 import numpy as np
 import ollama
 
-APP_DIR = Path(__file__).resolve().parent
-VECTOR_DB_PATH = APP_DIR / "emc_vector_db"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+VECTOR_DB_PATH = PROJECT_ROOT / "experiments" / "rag" / "emc_vector_db"
 COLLECTION_NAME = "emc_faults"
 EMBED_MODEL = "nomic-embed-text"
 DEFAULT_TOP_K = 5
@@ -98,7 +98,7 @@ def get_collection():
         raise RuntimeError(
             f"找不到向量库：{VECTOR_DB_PATH}，"
             f"集合名称：{COLLECTION_NAME}。"
-            "请先运行 Embedding_Test.py 建立向量库。"
+            "请先运行 experiments/rag/embedding_test.py 建立向量库。"
         ) from None
 
 

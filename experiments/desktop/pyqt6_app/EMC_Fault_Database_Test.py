@@ -8,8 +8,9 @@ try:
     import pandas as pd
 except ImportError:
     pd = None
-import EMC_Fault_Database
 import subprocess
+
+import EMC_Fault_Database
 
 try:
     from ollama import chat
@@ -22,6 +23,13 @@ from PyQt6.QtCore import pyqtSignal, QThread
 
 
 APP_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = (
+    Path(sys._MEIPASS)
+    if getattr(sys, "frozen", False)
+    else Path(__file__).resolve().parents[3]
+)
+DEFAULT_DATA_DIR = PROJECT_ROOT / "data" / "published" / "v1"
+ASSET_DIR = PROJECT_ROOT / "resources" / "icons" if getattr(sys, "frozen", False) else APP_DIR / "resources" / "icons"
 DEFAULT_DATA_FILES = ("data_1.json", "data_2.json")
 DEFAULT_LLM_MODEL = "deepseek-r1:8b"
 
@@ -105,8 +113,10 @@ class MainWindows(QMainWindow, EMC_Fault_Database.Ui_MainWindow):
     def __init__(self, parent=None, data_dir=None):
         QMainWindow.__init__(self, parent)
         self.setupUi(self)
-        self.app_dir = Path(data_dir) if data_dir else APP_DIR
-        self.BUAALabel.setPixmap(QPixmap(str(self.app_dir / "BUAA-白底蓝字.png")))
+        self.apply_readable_colors()
+        self.app_dir = Path(data_dir) if data_dir else DEFAULT_DATA_DIR
+        self.BUAALabel.setPixmap(QPixmap(str(ASSET_DIR / "BUAA-白底蓝字.png")))
+        self.model = None
         # 初始化显示表格
         self.resetdispTableView()
 
@@ -116,10 +126,6 @@ class MainWindows(QMainWindow, EMC_Fault_Database.Ui_MainWindow):
         self.saveDataPushButton.clicked.connect(self.save_userdata_pushButtonClicked)
         # 将“退出程序”按钮的信号与Slot函数连接
         self.exitPushButton.clicked.connect(self.exitPushButtonClicked)
-
-        # 全局变量
-        # QTableView更新
-        self.model = None
 
         # 字符串匹配
         self.json_dir = self.app_dir
@@ -143,6 +149,17 @@ class MainWindows(QMainWindow, EMC_Fault_Database.Ui_MainWindow):
             self.infoLabel.setText(f"系统已连接至 Ollama（{self.llm_model}），支持模糊搜索")
         else:
             self.infoLabel.setText("未检测到本地ollama服务，使用精确匹配搜索")
+
+    def apply_readable_colors(self):
+        """在浅色控件背景上固定使用深色文字，避免系统深色调色板导致白字白底。"""
+        for label in (self.titleLabel, self.noticeLabel, self.infoLabel, self.label):
+            label.setStyleSheet(label.styleSheet() + "\ncolor: black;")
+
+        self.dispTableView.setStyleSheet(
+            self.dispTableView.styleSheet()
+            + "\nQTableView { color: black; background-color: white; }"
+            + "\nQHeaderView::section { color: black; background-color: white; }"
+        )
 
     def resetdispTableView(self):
         # 规定水平表头标签
@@ -402,7 +419,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MainWindows()
     main.setWindowTitle('电磁兼容故障库')
-    main.setWindowIcon(QIcon(str(APP_DIR / "BUAA_logo_2048px.png")))
+    main.setWindowIcon(QIcon(str(ASSET_DIR / "BUAA_logo_2048px.png")))
     main.show()
 
     main.load_json_file()

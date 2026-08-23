@@ -8,8 +8,8 @@ import ollama
 
 ### 全局常量
 
-APP_DIR = Path(__file__).resolve().parent  # 脚本所在目录
-VECTOR_DB_PATH = APP_DIR / 'emc_vector_db' # 向量库目录
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+VECTOR_DB_PATH = PROJECT_ROOT / 'experiments' / 'rag' / 'emc_vector_db'
 COLLECTION_NAME = "emc_faults"             # 向量集合名，和建库保持一致
 EMBED_MODEL = "nomic-embed-text"           # 嵌入模型，和建库模型保持一致
 DEFAULT_TOP_K = 5                          # 默认返回词条数
@@ -98,7 +98,7 @@ def get_collection():
     except Exception:  # noqa: BLE001 - ChromaDB exceptions vary by backend/version
         raise RuntimeError(
             f"找不到向量库 {VECTOR_DB_PATH}（集合 {COLLECTION_NAME}）。"
-            "请先运行 Embedding_Test.py 完成建库。"
+            "请先运行 experiments/rag/embedding_test.py 完成建库。"
         ) from None
 
 

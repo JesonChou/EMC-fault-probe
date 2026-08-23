@@ -11,7 +11,8 @@ import numpy as np
 import ollama
 from ollama import ChatResponse, chat
 
-data_path = "./emc_vector_db"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+data_path = str(PROJECT_ROOT / "experiments" / "rag" / "emc_vector_db")
 collection_name = "emc_faults"
 
 model_name = 'deepseek-r1:7b'
@@ -41,7 +42,7 @@ USER_PROMPT_TEMPLATE = (
 history = [] # 多轮对话记忆变量
 
 # 会话文件存放目录
-SESSIONS_DIR = Path(__file__).resolve().parent / "chat_sessions"
+SESSIONS_DIR = PROJECT_ROOT / "data" / "runtime" / "sessions"
 
 # 向量化字符文本
 def embed_text(text:str) -> list[float]:
@@ -90,7 +91,9 @@ def start_ollama_background():
     # ② 用 `ollama serve` 后台启动常驻服务（不是交互式的 `ollama run`）
     #    日志重定向到文件：若用 PIPE 且不读取，管道写满会阻塞进程。
     #    用 with 管理文件：Popen 返回后子进程已持有句柄副本，父进程关闭不影响写日志。
-    with open("ollama_serve.log", "a", encoding="utf-8") as log:
+    log_path = PROJECT_ROOT / "data" / "runtime" / "logs" / "ollama_serve.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as log:
         process = subprocess.Popen(
             ["ollama", "serve"],
             stdout=log,

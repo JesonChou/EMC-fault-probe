@@ -26,7 +26,7 @@ RAG 的第一步是把"语义"变成"数字"：
   阶段一  建库（脚本上半部分，for 循环）：
     data_1.json ──→ 每条记录 6 个字段拼接成一段文本
                  ──→ embed_text() 嵌入为 768 维向量
-                 ──→ collection.add() 连同原始 JSON 一起写入 ./emc_vector_db
+                 ──→ collection.add() 连同原始 JSON 一起写入 experiments/rag/emc_vector_db
 
   阶段二  检索（脚本下半部分）：
     固定 query ──→ embed_text() 嵌入
@@ -37,11 +37,11 @@ RAG 的第一步是把"语义"变成"数字"：
   - 本机已启动 Ollama 服务，并已拉取嵌入模型：
         ollama pull nomic-embed-text
   - 已安装依赖：pip install chromadb ollama numpy
-  - 在 Codes/ 目录下运行（脚本使用相对路径 data_1.json、./emc_vector_db）
+  - 从仓库任意目录运行（脚本按自身目录定位 experiments/rag/emc_vector_db，数据定位到 data/published/v1/data_1.json）
 
 【注意事项】
   - 建库只应执行一次：重复运行会因 id（"0"~"54"）已存在而报错。
-    如需重建库，请先删除 emc_vector_db 目录。
+    如需重建库，请先删除 experiments/rag/emc_vector_db 目录。
   - 建库与检索必须使用同一个嵌入模型，否则向量不在同一语义空间，
     余弦相似度将失去意义。
   - 从 ChromaDB 取回的 metadata 字段顺序与 JSON 文件不一致属正常现象
@@ -54,7 +54,12 @@ RAG 的第一步是把"语义"变成"数字"：
 """
 
 import json, chromadb, ollama
+from pathlib import Path
 import numpy as np
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+VECTOR_DB_PATH = Path(__file__).resolve().parent / "emc_vector_db"
+DATA_FILE = PROJECT_ROOT / "data" / "published" / "v1" / "data_1.json"
 
 # 向量化字符文本
 def embed_text(text:str) -> list[float]:
@@ -72,7 +77,7 @@ def cosine_similarity(b: np.ndarray, a: np.ndarray) -> np.ndarray:
 # PersistentClint函数，指持久化到客户端，数据会真实写到磁盘，程序关闭或者电脑重启，数据还在
 # 输入参数为数据写入路径
 
-client = chromadb.PersistentClient(path="./emc_vector_db")
+client = chromadb.PersistentClient(path=str(VECTOR_DB_PATH))
 
 # collection 指数据库中的一张表，各存各的向量
 
@@ -80,7 +85,7 @@ collection = client.get_or_create_collection(name="emc_faults")
 
 # 从json文件中提取出来的原始词条
 
-entries = json.load(open("data_1.json", encoding="utf-8"))
+entries = json.load(DATA_FILE.open(encoding="utf-8"))
 
 for i, item in enumerate(entries):
     text = (

@@ -11,42 +11,44 @@ from pathlib import Path
 
 import pytest
 
-CODES_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(CODES_DIR))
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DATA_DIR = PROJECT_ROOT / "data" / "published" / "v1"
+sys.path.insert(0, str(PACKAGE_ROOT / "src"))
 
-from JSONFileProcessTest import search_json_by_string_enhanced
+from emc_core.retrieval.json_search import search_json_by_string_enhanced
 
 REQUIRED_FIELDS = ("故障对象", "故障现象", "故障原因", "解决方案", "故障等级", "发生频率")
 DATA_FILES = ("data_1.json", "data_2.json")
 
 
 def _load(file_name: str) -> list:
-    with open(CODES_DIR / file_name, encoding="utf-8") as f:
+    with open(DATA_DIR / file_name, encoding="utf-8") as f:
         return json.load(f)
 
 
 # ---------- search_json_by_string_enhanced ----------
 
 def test_search_matches_across_all_fields():
-    tmp = CODES_DIR / "data_1.json"
+    tmp = DATA_DIR / "data_1.json"
     results = search_json_by_string_enhanced(str(tmp), "干扰")
     assert results, "should find at least one entry containing 干扰"
 
 
 def test_search_with_target_field_only():
-    tmp = CODES_DIR / "data_1.json"
+    tmp = DATA_DIR / "data_1.json"
     results = search_json_by_string_enhanced(str(tmp), "严重", target_field="故障等级")
     assert results
     assert all(r["故障等级"] == "严重" for r in results)
 
 
 def test_search_no_match_returns_empty():
-    tmp = CODES_DIR / "data_1.json"
+    tmp = DATA_DIR / "data_1.json"
     assert search_json_by_string_enhanced(str(tmp), "不存在的关键词xyz") == []
 
 
 def test_search_missing_file_returns_empty():
-    assert search_json_by_string_enhanced(str(CODES_DIR / "nope.json"), "x") == []
+    assert search_json_by_string_enhanced(str(DATA_DIR / "nope.json"), "x") == []
 
 
 def test_search_invalid_json_returns_empty(tmp_path):

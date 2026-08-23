@@ -1,15 +1,22 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from pathlib import Path
+
+
+APP_DIR = Path.cwd()
+PROJECT_ROOT = APP_DIR.parents[2]
+DATA_DIR = PROJECT_ROOT / 'data' / 'published' / 'v1'
+ICON_DIR = APP_DIR / 'resources' / 'icons'
 
 a = Analysis(
-    ['EMC_Fault_Database_Test.py'],
-    pathex=[],
+    [str(APP_DIR / 'EMC_Fault_Database_Test.py')],
+    pathex=[str(APP_DIR)],
     binaries=[],
     datas=[
-        ('data_1.json', '.'),
-        ('data_2.json', '.'),
-        ('BUAA-白底蓝字.png', '.'),
-        ('BUAA_logo_2048px.png', '.'),
+        (str(DATA_DIR / 'data_1.json'), 'data/published/v1'),
+        (str(DATA_DIR / 'data_2.json'), 'data/published/v1'),
+        (str(ICON_DIR / 'BUAA-白底蓝字.png'), 'resources/icons'),
+        (str(ICON_DIR / 'BUAA_logo_2048px.png'), 'resources/icons'),
     ],
     hiddenimports=[],
     hookspath=[],
@@ -40,5 +47,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['BUAA_logo.ico'],
+    icon=[str(ICON_DIR / 'BUAA_logo.ico')],
 )

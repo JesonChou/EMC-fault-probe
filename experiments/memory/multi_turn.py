@@ -1,13 +1,15 @@
 import subprocess
 import time
 import urllib.request  # 用于探测 Ollama HTTP 服务是否已就绪
+from pathlib import Path
 
 import chromadb
 import numpy as np
 import ollama
 from ollama import ChatResponse, chat
 
-data_path = "./emc_vector_db"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+data_path = str(PROJECT_ROOT / "experiments" / "rag" / "emc_vector_db")
 collection_name = "emc_faults"
 
 model_name = 'deepseek-r1:7b'
