@@ -1,6 +1,6 @@
 <h1 align = "center">EMC-fault-probe</h1>
 <h1 align = "center">电磁兼容故障库（中文资料）</h1>
-<h3 align="right">Records 1 tool calling</h3>
+<h3 align="right">Records 1 agent tool calling</h3>
 <p align="right">Begin: 2026.8.16</p>
 
 <center>用于项目RAG化与Agent化改造学习记录</center>
@@ -43,7 +43,7 @@ Tool calling 的实现方式主要有两种，一种是模型原生工具调用�
 
 ## 2.1 Prompt 协议调用
 
-这一节，我们来实现一下方式 B 的路径。工具定义在[Codes/toolp.py](../Codes/toolp.py)，模型调用、解析器、校验器以及测试用例等放在[Codes/Toolp_Call_Test.py](../Codes/Toolp_Call_Test.py)。文件命名中的 `toolp` 指 `tool-prompt`，表示采用 Prompt 协议调用的方式实现 Tool Call。
+这一节，我们来实现一下方式 B 的路径。工具定义在[experiments/agent-loop/prompt-tool/toolp.py](../../experiments/agent-loop/prompt-tool/toolp.py)，模型调用、解析器、校验器以及测试用例等放在[experiments/agent-loop/prompt-tool/prompt_tool_call.py](../../experiments/agent-loop/prompt-tool/prompt_tool_call.py)。文件命名中的 `toolp` 指 `tool-prompt`，表示采用 Prompt 协议调用的方式实现 Tool Call。
 
 ### 2.1.1 `toolp.py` 工具定义
 
@@ -184,7 +184,7 @@ Tool calling 的实现方式主要有两种，一种是模型原生工具调用�
 
 4.  撰写搜索工具函数：
 
-    我们可以在 [Codes/Embedding_Test.py](../Codes/Embedding_Test.py) 中进行数据 JSON 文件的向量化与数据库存储工作，在工具函数中只需要进行==对 `query` 进行向量化 $\rightarrow$ 提取数据库中的条目并与 `query` 的向量化进行余弦相似度比较 $\rightarrow$ 取最相似的若干条 `(Top-K)`== 的工作。完整的搜索工具函数如下：
+    我们可以在 [experiments/rag/embedding_test.py](../../experiments/rag/embedding_test.py) 中进行数据 JSON 文件的向量化与数据库存储工作，在工具函数中只需要进行==对 `query` 进行向量化 $\rightarrow$ 提取数据库中的条目并与 `query` 的向量化进行余弦相似度比较 $\rightarrow$ 取最相似的若干条 `(Top-K)`== 的工作。完整的搜索工具函数如下：
 
     ```python
     def search_cases(query: str, top_k: int = DEFAULT_TOP_K) -> str:
@@ -218,11 +218,11 @@ Tool calling 的实现方式主要有两种，一种是模型原生工具调用�
         return "\n\n".join(lines)
     ```
 
-    `query` 向量化和余弦相似度的实现方法和函数，参见本文件内部的 `embed_text` 、`cosine_similarity` 函数，以及相关功能的测试文件 [Codes/Embedding_Test.py](../Codes/Embedding_Test.py)。
+    `query` 向量化和余弦相似度的实现方法和函数，参见本文件内部的 `embed_text` 、`cosine_similarity` 函数，以及相关功能的测试文件 [experiments/rag/embedding_test.py](../../experiments/rag/embedding_test.py)。
 
-### 2.1.2 `Toolp_Call_Test.py` 工具调用测试
+### 2.1.2 `prompt_tool_call.py` 工具调用测试
 
-`Toolp_Call_Test.py` 负责完成模型调用、工具调用 JSON 的解析、参数校验、工具执行以及测试。它从 `toolp.py` 中导入 `TOOLS`、`tool_schemas_text` 和 `search_cases`。其中，导入 `toolp` 模块时，`search_cases` 函数上的 `@tool` 装饰器会自动执行，将工具注册进 `TOOLS` 注册表。
+`prompt_tool_call.py` 负责完成模型调用、工具调用 JSON 的解析、参数校验、工具执行以及测试。它从 `toolp.py` 中导入 `TOOLS`、`tool_schemas_text` 和 `search_cases`。其中，导入 `toolp` 模块时，`search_cases` 函数上的 `@tool` 装饰器会自动执行，将工具注册进 `TOOLS` 注册表。
 
 1.  配置模型和工具说明书：
 
@@ -441,7 +441,7 @@ Tool calling 的实现方式主要有两种，一种是模型原生工具调用�
 
 在原生调用中，工具定义 `tools` 作为请求的独立字段而非消息，告诉模型可以用哪些工具，工具接受什么参数。
 
-在这一节中，工具定义在 [Codes/tooln.py](../Codes/tooln.py)，对于工具的调用测试放在[Codes/Tooln_Call_Test.py](../Codes/Tooln_Call_Test.py)。文件命名中的 `n` 表示 Native，即原生工具调用。
+在这一节中，工具定义在 [experiments/agent-loop/native-tool/tooln.py](../../experiments/agent-loop/native-tool/tooln.py)，对于工具的调用测试放在[experiments/agent-loop/native-tool/native_tool_call.py](../../experiments/agent-loop/native-tool/native_tool_call.py)。文件命名中的 `n` 表示 Native，即原生工具调用。
 
 ### 2.2.1 `tooln.py` 工具定义
 
@@ -650,9 +650,9 @@ Tool calling 的实现方式主要有两种，一种是模型原生工具调用�
 
 4.  其余的相关函数请参考文件内部定义，此处不再赘述。
 
-### 2.2.2 `Tooln_Call_Test.py` Ollama 原生工具调用测试
+### 2.2.2 `native_tool_call.py` Ollama 原生工具调用测试
 
-`Tooln_Call_Test.py` 负责测试 Ollama 的原生工具调用流程。与 2.1 节的 Prompt 协议不同，这里不需要从模型文本中寻找工具调用 JSON，而是直接读取 Ollama SDK 返回的 `ChatResponse` 对象中的 `message.tool_calls` 字段。
+`native_tool_call.py` 负责测试 Ollama 的原生工具调用流程。与 2.1 节的 Prompt 协议不同，这里不需要从模型文本中寻找工具调用 JSON，而是直接读取 Ollama SDK 返回的 `ChatResponse` 对象中的 `message.tool_calls` 字段。
 
 1.  配置模型、生成参数和原生工具列表：
 
