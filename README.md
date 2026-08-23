@@ -110,7 +110,7 @@ $env:EMC_OLLAMA_MODEL = "qwen2.5:7b"   # 可选，覆盖默认模型
 ## Documentation
 
 - [**项目过程与细节记录**](./docs/research/项目过程与细节记录.md) — 完整开发过程：数据收集、预处理、LLM 提取、故障库构建、程序实现与代码讲解
-- [**Agent 工具调用记录**](./docs/research/agent-tool-calling.md) — Prompt 工具调用与原生工具调用实验
+- [**Agent 工具调用记录**](./docs/research/1-agent-tool-calling.md) — Prompt 工具调用与原生工具调用实验
 - [**README.en.md**](./README.en.md) — English version
 - [**CONTRIBUTING.md**](./CONTRIBUTING.md) — 贡献指南（GitHub Flow）
 - [**LICENSE**](./LICENSE) — MIT License

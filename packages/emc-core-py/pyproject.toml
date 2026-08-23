@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "emc-core"
+version = "0.1.0"
+description = "Shared EMC fault-domain and retrieval primitives."
+requires-python = ">=3.11"
+license = "MIT"
+
+[tool.setuptools.packages.find]
+where = ["src"]

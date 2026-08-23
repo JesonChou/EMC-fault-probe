@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -42,7 +42,7 @@ jobs:
     env:
       QT_QPA_PLATFORM: offscreen # PyQt6 GUI 无显示环境
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
@@ -67,10 +67,10 @@ jobs:
         # 反斜杠续行，命令必须写为单行
         run: python -m pytest packages/emc-core-py/tests/ experiments/desktop/pyqt6_app/tests/ -v --cov=packages/emc-core-py/src --cov-report=term-missing --cov-report=xml:coverage.xml --junitxml=junit.xml
       - name: GUI module import smoke test
-        run: python -c "import sys; sys.path.insert(0, 'experiments/desktop/pyqt6_app'); import main; print('PyQt6 experiment import OK')"
+        run: python -c "import sys; sys.path.insert(0, 'experiments/desktop/pyqt6_app'); import EMC_Fault_Database_Test; print('PyQt6 experiment import OK')"
       - name: Upload test reports
         if: always() # 测试失败也保留报告供排查
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports-${{ matrix.os }}-py${{ matrix.python-version }}
           path: |

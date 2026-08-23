@@ -109,7 +109,7 @@ The data is the core asset: instead of relying on an existing dataset, fault cas
 ## Documentation
 
 - [**Project notes**](./docs/research/项目过程与细节记录.md) (中文) — full development record: data collection, preprocessing, LLM extraction, database construction, implementation and code walkthrough
-- [**Agent tool-calling record**](./docs/research/agent-tool-calling.md) — Prompt and native tool-calling experiments
+- [**Agent tool-calling record**](./docs/research/1-agent-tool-calling.md) — Prompt and native tool-calling experiments
 - [**README.md**](./README.md) — 简体中文版
 - [**CONTRIBUTING.md**](./CONTRIBUTING.md) — contribution guide (GitHub Flow)
 - [**LICENSE**](./LICENSE) — MIT License
