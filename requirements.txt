@@ -1,5 +1,6 @@
 PyQt6>=6.11,<6.12
 pandas>=2.0
+numpy>=1.26
 ollama>=0.4
 openpyxl>=3.1
 chromadb>=1.5

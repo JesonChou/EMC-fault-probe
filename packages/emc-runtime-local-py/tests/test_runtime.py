@@ -7,7 +7,9 @@ from emc_core.agent.state import AgentState
 from emc_core.domain.events import AgentEventType
 from emc_core.ports.llm import ChatMessage, LLMOutput
 from emc_core.tools.models import ToolCall, ToolResult, ToolSpec
+from emc_core.tools.registry import ToolRegistry
 from emc_runtime_local.loop import run_loop
+from emc_runtime_local.runtime import LocalRuntime
 
 
 class FakeLLM:
@@ -276,3 +278,42 @@ def test_runtime_returns_tool_exception_to_model() -> None:
         "[工具执行错误] RuntimeError: 数据库暂时不可用"
     )
     assert state.pending_tool_call is None
+
+
+def test_local_runtime_composes_llm_registry_and_executor() -> None:
+    state = AgentState(
+        session_id="session-local-runtime",
+        messages=[{"role": "user", "content": "查询辐射发射案例。"}],
+    )
+    llm = FakeLLM(
+        ToolCall(
+            name="search_cases",
+            arguments={"query": "辐射发射"},
+            call_id="call-runtime-001",
+        ),
+        "已根据工具结果完成回答。",
+    )
+
+    async def search_cases(query: str) -> str:
+        return f"检索关键词：{query}"
+
+    registry = ToolRegistry()
+    registry.register(
+        spec=ToolSpec(name="search_cases", description="查询案例"),
+        handler=search_cases,
+    )
+    runtime = LocalRuntime(
+        llm=llm,
+        registry=registry,
+    )
+
+    events = asyncio.run(collect_events(runtime.run(state=state)))
+
+    assert [event.type for event in events] == [
+        AgentEventType.TURN_STARTED,
+        AgentEventType.TOOL_REQUESTED,
+        AgentEventType.TOOL_COMPLETED,
+        AgentEventType.ASSISTANT_COMPLETED,
+        AgentEventType.TURN_COMPLETED,
+    ]
+    assert state.messages[-1]["content"] == "已根据工具结果完成回答。"

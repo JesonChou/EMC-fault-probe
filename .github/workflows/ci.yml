@@ -28,7 +28,7 @@ jobs:
       - name: Install ruff
         run: pip install ruff
       - name: Ruff check
-        run: ruff check apps packages experiments scripts
+        run: ruff check apps packages integrations experiments scripts
 
   test:
     name: Test (py${{ matrix.python-version }} / ${{ matrix.os }})
@@ -58,14 +58,15 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install pytest pytest-cov
+          pip install -e packages/emc-core-py -e packages/emc-runtime-local-py
       - name: Syntax check all scripts
         # RAG/Ollama 实验依赖本机 Ollama 服务，CI 不可用，
         # 故仅编译校验语法，不执行。
-        run: python -m compileall -q apps packages experiments scripts tests
+        run: python -m compileall -q apps packages integrations experiments scripts tests
       - name: Unit tests with coverage
         # 注意：Windows runner 默认 shell 是 PowerShell，不支持 bash 的
         # 反斜杠续行，命令必须写为单行
-        run: python -m pytest packages/emc-core-py/tests/ experiments/desktop/pyqt6_app/tests/ -v --cov=packages/emc-core-py/src --cov-report=term-missing --cov-report=xml:coverage.xml --junitxml=junit.xml
+        run: python -m pytest packages/emc-core-py/tests/ packages/emc-runtime-local-py/tests/ integrations/models/ollama/tests/ experiments/desktop/pyqt6_app/tests/ -v --cov=packages/emc-core-py/src --cov=packages/emc-runtime-local-py/src --cov-report=term-missing --cov-report=xml:coverage.xml --junitxml=junit.xml
       - name: GUI module import smoke test
         run: python -c "import sys; sys.path.insert(0, 'experiments/desktop/pyqt6_app'); import EMC_Fault_Database_Test; print('PyQt6 experiment import OK')"
       - name: Upload test reports
