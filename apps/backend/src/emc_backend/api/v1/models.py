@@ -43,7 +43,12 @@ async def list_models(
     status = await container.ollama_status()
     installed = list(status["models"])
     chat_candidates = [
-        name for name in installed if name != container.settings.embedding_model
+        name
+        for name in installed
+        if not is_ollama_model_installed(
+            container.settings.embedding_model,
+            [name],
+        )
     ]
     return ModelsResponse(
         ollama_available=bool(status["available"]),

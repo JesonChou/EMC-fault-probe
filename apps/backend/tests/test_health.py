@@ -92,6 +92,27 @@ def test_models_endpoint_separates_chat_and_embedding_roles() -> None:
     assert response.json()["chat_candidates"] == ["qwen3.5:9b-q4_K_M"]
 
 
+def test_models_endpoint_excludes_latest_tagged_embedding_model() -> None:
+    container = FakeContainer(_settings())
+
+    async def latest_tag_status() -> dict[str, Any]:
+        status = await FakeContainer.ollama_status(container)
+        status["models"] = ["nomic-embed-text:latest", "qwen3.5:9b-q4_K_M"]
+        return status
+
+    container.ollama_status = latest_tag_status  # type: ignore[method-assign]
+    application = create_app(
+        settings=container.settings,
+        container_factory=lambda _: container,
+    )
+
+    with TestClient(application) as client:
+        response = client.get("/api/v1/models")
+
+    assert response.status_code == 200
+    assert response.json()["chat_candidates"] == ["qwen3.5:9b-q4_K_M"]
+
+
 def test_openapi_metadata_and_routes_are_available() -> None:
     container = FakeContainer(_settings())
     application = create_app(
@@ -106,3 +127,18 @@ def test_openapi_metadata_and_routes_are_available() -> None:
     assert "/api/v1/health" in document["paths"]
     assert "/api/v1/models" in document["paths"]
     assert "/api/v1/sessions" in document["paths"]
+
+
+def test_built_web_workbench_is_served_from_root(tmp_path: Path) -> None:
+    web_dist = tmp_path / "apps" / "web" / "dist"
+    web_dist.mkdir(parents=True)
+    web_dist.joinpath("index.html").write_text("<h1>EMC workbench</h1>", encoding="utf-8")
+    settings = Settings(project_root=tmp_path)
+    container = FakeContainer(settings)
+    application = create_app(settings=settings, container_factory=lambda _: container)
+
+    with TestClient(application) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert "EMC workbench" in response.text

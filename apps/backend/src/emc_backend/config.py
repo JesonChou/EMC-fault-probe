@@ -83,6 +83,7 @@ class Settings:
     chat_model: str = "qwen3.5:9b-q4_K_M"
     embedding_model: str = "nomic-embed-text"
     ollama_think: bool = True
+    ollama_num_predict: int = 2048
     auto_start_ollama: bool = False
     max_agent_steps: int = 5
     chroma_collection: str = "emc_faults"
@@ -130,6 +131,7 @@ class Settings:
 
         port = _env_int("EMC_BACKEND_PORT", 8000)
         max_steps = _env_int("EMC_MAX_AGENT_STEPS", 5)
+        num_predict = _env_int("EMC_OLLAMA_NUM_PREDICT", 2048)
         runtime_root_value = os.getenv("EMC_RUNTIME_ROOT")
         runtime_root = (
             Path(runtime_root_value).expanduser().resolve()
@@ -140,6 +142,8 @@ class Settings:
             raise ValueError("EMC_BACKEND_PORT 必须在 1 到 65535 之间")
         if max_steps < 1:
             raise ValueError("EMC_MAX_AGENT_STEPS 必须大于 0")
+        if num_predict < 1:
+            raise ValueError("EMC_OLLAMA_NUM_PREDICT 必须大于 0")
 
         return cls(
             project_root=discover_project_root(),
@@ -157,6 +161,7 @@ class Settings:
                 "nomic-embed-text",
             ),
             ollama_think=_env_bool("EMC_OLLAMA_THINK", True),
+            ollama_num_predict=num_predict,
             auto_start_ollama=_env_bool("EMC_AUTO_START_OLLAMA", False),
             max_agent_steps=max_steps,
             chroma_collection=os.getenv("EMC_CHROMA_COLLECTION", "emc_faults"),

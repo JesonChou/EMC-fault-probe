@@ -13,6 +13,7 @@ def test_settings_read_and_normalize_environment(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setenv("EMC_AUTO_START_OLLAMA", "yes")
     monkeypatch.setenv("EMC_OLLAMA_HOST", "http://localhost:11434/")
     monkeypatch.setenv("EMC_OLLAMA_THINK", "false")
+    monkeypatch.setenv("EMC_OLLAMA_NUM_PREDICT", "1024")
     monkeypatch.setenv("EMC_RUNTIME_ROOT", str(project_root / "local-runtime"))
 
     settings = Settings.from_env()
@@ -22,6 +23,7 @@ def test_settings_read_and_normalize_environment(monkeypatch: pytest.MonkeyPatch
     assert settings.auto_start_ollama is True
     assert settings.ollama_host == "http://localhost:11434"
     assert settings.ollama_think is False
+    assert settings.ollama_num_predict == 1024
     assert settings.chroma_path == project_root / "local-runtime" / "vector_store"
     assert settings.session_path == project_root / "local-runtime" / "sessions"
     assert (

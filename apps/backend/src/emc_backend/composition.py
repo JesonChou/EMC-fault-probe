@@ -154,7 +154,10 @@ def build_container(settings: Settings) -> AppContainer:
             model=model or settings.chat_model,
             think=settings.ollama_think if think is None else think,
             # 固定温度让相同故障更稳定地选择相同工具和检索关键词。
-            options={"temperature": 0},
+            options={
+                "temperature": 0,
+                "num_predict": settings.ollama_num_predict,
+            },
             client=ollama_client,
         )
         return LocalRuntime(

@@ -71,3 +71,46 @@ def test_workspace_api_rejects_missing_directory(tmp_path: Path) -> None:
 
     assert response.status_code == 422
     assert "工作区不存在" in response.json()["detail"]
+
+
+def test_workspace_api_picks_directory_with_native_dialog(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    project = tmp_path / "project"
+    selected = tmp_path / "selected"
+    project.mkdir()
+    selected.mkdir()
+    settings = Settings(project_root=project)
+    container = WorkspaceApiContainer(settings, tmp_path / "recent.json")
+    application = create_app(settings=settings, container_factory=lambda _: container)
+    monkeypatch.setattr(
+        "emc_backend.api.v1.workspaces.pick_directory",
+        lambda _initial: str(selected),
+    )
+
+    with TestClient(application) as client:
+        response = client.post("/api/v1/workspaces/pick")
+
+    assert response.status_code == 200
+    assert response.json()["path"] == str(selected.resolve())
+
+
+def test_workspace_api_returns_no_content_when_picker_is_cancelled(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    project = tmp_path / "project"
+    project.mkdir()
+    settings = Settings(project_root=project)
+    container = WorkspaceApiContainer(settings, tmp_path / "recent.json")
+    application = create_app(settings=settings, container_factory=lambda _: container)
+    monkeypatch.setattr(
+        "emc_backend.api.v1.workspaces.pick_directory",
+        lambda _initial: None,
+    )
+
+    with TestClient(application) as client:
+        response = client.post("/api/v1/workspaces/pick")
+
+    assert response.status_code == 204
