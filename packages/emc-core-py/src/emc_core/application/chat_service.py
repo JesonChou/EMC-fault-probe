@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 
 from emc_core.agent.state import AgentState
 from emc_core.domain.events import AgentEvent, AgentEventType
@@ -23,10 +23,13 @@ class ChatService:
         store: SessionStore,
         runtime: AgentRuntime,
         system_prompt: str,
+        runtime_factory: Callable[[str | None, bool | None], AgentRuntime]
+        | None = None,
     ) -> None:
         self._store = store
         self._runtime = runtime
         self._system_prompt = system_prompt.strip()
+        self._runtime_factory = runtime_factory
         self._locks: dict[str, asyncio.Lock] = {}
         self._active_states: dict[str, AgentState] = {}
 
@@ -35,6 +38,9 @@ class ChatService:
         *,
         session_id: str,
         content: str,
+        model: str | None = None,
+        think: bool | None = None,
+        workspace_path: str | None = None,
     ) -> AsyncIterator[AgentEvent]:
         normalized = content.strip()
         if not normalized:
@@ -52,11 +58,27 @@ class ChatService:
                 session_id,
                 role=MessageRole.USER,
                 content=normalized,
+                metadata={
+                    key: value
+                    for key, value in {
+                        "model": model,
+                        "think": think,
+                        "workspace_path": workspace_path,
+                    }.items()
+                    if value is not None
+                },
             )
 
             messages: list[dict[str, str]] = []
             if self._system_prompt:
                 messages.append({"role": "system", "content": self._system_prompt})
+            if workspace_path:
+                messages.append(
+                    {
+                        "role": "system",
+                        "content": f"当前用户选择的本地工作区是：{workspace_path}",
+                    }
+                )
             messages.extend(message.to_llm_message() for message in session.messages)
             messages.append({"role": "user", "content": normalized})
 
@@ -64,7 +86,12 @@ class ChatService:
             self._active_states[session_id] = state
             thinking_parts: list[str] = []
 
-            async for event in self._runtime.run(state=state):
+            runtime = (
+                self._runtime_factory(model, think)
+                if self._runtime_factory is not None
+                else self._runtime
+            )
+            async for event in runtime.run(state=state):
                 await asyncio.to_thread(self._store.append_event, session_id, event)
                 if event.type is AgentEventType.ASSISTANT_THINKING_DELTA:
                     thinking_parts.append(str(event.data.get("delta", "")))

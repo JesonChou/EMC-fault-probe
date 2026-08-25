@@ -82,3 +82,47 @@ def test_chat_service_persists_thinking_but_excludes_it_from_model_history(
         {"role": "user", "content": "第二问"},
     ]
     assert all("内部思考" not in message["content"] for message in second_history)
+
+
+def test_chat_service_resolves_per_turn_runtime_and_workspace_context(
+    tmp_path: Path,
+) -> None:
+    store = JsonlSessionStore(tmp_path)
+    session = store.create()
+    default_runtime = FakeStreamingRuntime()
+    selected_runtime = FakeStreamingRuntime()
+    requests: list[tuple[str | None, bool | None]] = []
+
+    def runtime_factory(model: str | None, think: bool | None) -> FakeStreamingRuntime:
+        requests.append((model, think))
+        return selected_runtime
+
+    service = ChatService(
+        store=store,
+        runtime=default_runtime,
+        runtime_factory=runtime_factory,
+        system_prompt="系统提示",
+    )
+    asyncio.run(
+        _collect(
+            service.send_message(
+                session_id=session.session_id,
+                content="分析当前项目",
+                model="qwen-custom:latest",
+                think=False,
+                workspace_path=str(tmp_path),
+            )
+        )
+    )
+
+    assert requests == [("qwen-custom:latest", False)]
+    assert selected_runtime.states[0].messages[:2] == [
+        {"role": "system", "content": "系统提示"},
+        {"role": "system", "content": f"当前用户选择的本地工作区是：{tmp_path}"},
+    ]
+    restored = store.load(session.session_id)
+    assert restored.messages[0].metadata == {
+        "model": "qwen-custom:latest",
+        "think": False,
+        "workspace_path": str(tmp_path),
+    }

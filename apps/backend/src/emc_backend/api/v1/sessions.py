@@ -46,7 +46,9 @@ async def get_session(
     try:
         session = await container.session_service.get(session_id)
     except (SessionNotFoundError, ValueError) as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
     return session_response(session)
 
 
@@ -62,18 +64,35 @@ async def send_message(
     try:
         await container.session_service.get(session_id)
     except (SessionNotFoundError, ValueError) as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)
+        ) from exc
     if container.chat_service.is_active(session_id):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(SessionBusyError(f"会话正在运行：{session_id}")),
         )
 
+    try:
+        await container.validate_chat_model(payload.model)
+        workspace_path = None
+        if payload.workspace_path is not None:
+            selected = await container.workspace_service.select(payload.workspace_path)
+            workspace_path = selected.path
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(exc),
+        ) from exc
+
     async def event_stream() -> AsyncIterator[str]:
         try:
             async for event in container.chat_service.send_message(
                 session_id=session_id,
                 content=payload.content,
+                model=payload.model,
+                think=payload.think,
+                workspace_path=workspace_path,
             ):
                 if await request.is_disconnected():
                     container.chat_service.cancel(session_id)
