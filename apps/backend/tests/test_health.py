@@ -88,6 +88,8 @@ def test_models_endpoint_separates_chat_and_embedding_roles() -> None:
         {"name": "qwen3.5:9b-q4_K_M", "role": "chat", "installed": True},
         {"name": "nomic-embed-text", "role": "embedding", "installed": True},
     ]
+    assert response.json()["default_chat_model"] == "qwen3.5:9b-q4_K_M"
+    assert response.json()["chat_candidates"] == ["qwen3.5:9b-q4_K_M"]
 
 
 def test_openapi_metadata_and_routes_are_available() -> None:

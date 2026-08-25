@@ -32,6 +32,9 @@ class SessionResponse(BaseModel):
 
 class SendMessageRequest(BaseModel):
     content: str = Field(min_length=1, max_length=20_000)
+    model: str | None = Field(default=None, min_length=1, max_length=300)
+    think: bool | None = None
+    workspace_path: str | None = Field(default=None, min_length=1, max_length=4096)
 
 
 class CancelResponse(BaseModel):

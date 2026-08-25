@@ -100,6 +100,14 @@ class Settings:
         return (self.runtime_root or self.project_root / "data" / "runtime") / "sessions"
 
     @property
+    def workspace_state_path(self) -> Path:
+        return (
+            (self.runtime_root or self.project_root / "data" / "runtime")
+            / "workspaces"
+            / "recent.json"
+        )
+
+    @property
     def system_prompt_path(self) -> Path:
         return (
             self.project_root

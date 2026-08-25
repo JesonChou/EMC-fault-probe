@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from subprocess import Popen
 from typing import Any
 
 from emc_core.application.chat_service import ChatService
 from emc_core.application.session_service import SessionService
+from emc_core.application.workspace_service import WorkspaceService
 from emc_core.persistence.jsonl_store import JsonlSessionStore
 from emc_core.ports.agent_runtime import AgentRuntime
 from emc_core.tools.registry import ToolRegistry
 from emc_core.tools.search_cases import SEARCH_CASES_SPEC, SearchCasesTool
+from emc_core.workspace.manager import WorkspaceManager
+from emc_core.workspace.recent_store import RecentWorkspaceStore
 from emc_runtime_local import LocalRuntime
 from ollama import AsyncClient
 
@@ -41,6 +45,8 @@ class AppContainer:
     ollama_client: AsyncClient
     session_service: SessionService
     chat_service: ChatService
+    workspace_service: WorkspaceService
+    runtime_factory: Callable[[str | None, bool | None], AgentRuntime]
     _ollama_process: Popen[Any] | None = field(default=None, init=False, repr=False)
     _started: bool = field(default=False, init=False, repr=False)
     _closed: bool = field(default=False, init=False, repr=False)
@@ -110,19 +116,21 @@ class AppContainer:
             ),
         }
 
+    async def validate_chat_model(self, model: str | None) -> None:
+        if model is None:
+            return
+        normalized = model.strip()
+        if not normalized:
+            raise ValueError("模型名称不能为空")
+        status = await self.ollama_status()
+        if normalized not in status["models"]:
+            raise ValueError(f"本地未安装模型：{normalized}")
+
 
 def build_container(settings: Settings) -> AppContainer:
     """创建后端的具体依赖图，不执行网络或磁盘连接。"""
 
     ollama_client = AsyncClient(host=settings.ollama_host)
-    llm = OllamaLLM(
-        model=settings.chat_model,
-        think=settings.ollama_think,
-        # 固定温度让相同故障更稳定地选择相同工具和检索关键词；这是原生
-        # 工具调用实验已经验证过的设置，仍可在未来扩展为用户配置。
-        options={"temperature": 0},
-        client=ollama_client,
-    )
     embedder = OllamaEmbedder(
         model=settings.embedding_model,
         client=ollama_client,
@@ -140,11 +148,22 @@ def build_container(settings: Settings) -> AppContainer:
         spec=SEARCH_CASES_SPEC,
         handler=SearchCasesTool(retriever),
     )
-    runtime = LocalRuntime(
-        llm=llm,
-        registry=registry,
-        max_steps=settings.max_agent_steps,
-    )
+
+    def runtime_factory(model: str | None, think: bool | None) -> AgentRuntime:
+        llm = OllamaLLM(
+            model=model or settings.chat_model,
+            think=settings.ollama_think if think is None else think,
+            # 固定温度让相同故障更稳定地选择相同工具和检索关键词。
+            options={"temperature": 0},
+            client=ollama_client,
+        )
+        return LocalRuntime(
+            llm=llm,
+            registry=registry,
+            max_steps=settings.max_agent_steps,
+        )
+
+    runtime = runtime_factory(settings.chat_model, settings.ollama_think)
     session_store = JsonlSessionStore(settings.session_path)
     session_service = SessionService(session_store)
     system_prompt = settings.system_prompt_path.read_text(encoding="utf-8")
@@ -152,6 +171,13 @@ def build_container(settings: Settings) -> AppContainer:
         store=session_store,
         runtime=runtime,
         system_prompt=system_prompt,
+        runtime_factory=runtime_factory,
+    )
+    workspace_service = WorkspaceService(
+        WorkspaceManager(
+            default_path=settings.project_root,
+            store=RecentWorkspaceStore(settings.workspace_state_path),
+        )
     )
 
     return AppContainer(
@@ -160,4 +186,6 @@ def build_container(settings: Settings) -> AppContainer:
         ollama_client=ollama_client,
         session_service=session_service,
         chat_service=chat_service,
+        workspace_service=workspace_service,
+        runtime_factory=runtime_factory,
     )
