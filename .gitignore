@@ -9,6 +9,8 @@ artifacts/
 .codegraph/
 .vscode/
 reasonix.toml
+node_modules/
+apps/web/dist/
 
 # 实验向量数据库（可由 experiments/rag/embedding_test.py 重建）
 experiments/rag/emc_vector_db/
