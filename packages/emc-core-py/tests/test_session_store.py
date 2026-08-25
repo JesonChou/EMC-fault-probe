@@ -15,7 +15,7 @@ def test_jsonl_store_creates_lists_and_restores_full_session(tmp_path: Path) -> 
         session.session_id,
         role=MessageRole.USER,
         content="辐射发射超标怎么办？",
-        metadata={"hit_ids": [1, 2]},
+        metadata={"hit_ids": [1, 2], "workspace_path": str(tmp_path)},
     )
     store.append_event(
         session.session_id,
@@ -37,11 +37,15 @@ def test_jsonl_store_creates_lists_and_restores_full_session(tmp_path: Path) -> 
     summaries = store.list_summaries()
 
     assert len(restored.messages) == 2
-    assert restored.messages[0].metadata == {"hit_ids": [1, 2]}
+    assert restored.messages[0].metadata == {
+        "hit_ids": [1, 2],
+        "workspace_path": str(tmp_path),
+    }
     assert restored.messages[1].thinking == "先判断干扰路径。"
     assert restored.events[0].session_id == session.session_id
     assert summaries[0].title == "辐射发射超标怎么办？"
     assert summaries[0].turns == 1
+    assert summaries[0].workspace_path == str(tmp_path)
 
 
 def test_jsonl_store_skips_corrupt_trailing_line(tmp_path: Path) -> None:

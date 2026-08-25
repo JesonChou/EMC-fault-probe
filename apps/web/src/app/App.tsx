@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowDown } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { Composer } from "../components/Composer";
 import { Sidebar } from "../components/Sidebar";
 import { TopBar } from "../components/TopBar";
@@ -7,8 +9,12 @@ import { WorkspacePanel } from "../components/WorkspacePanel";
 import { previewSessions, previewWorkspace } from "../demo";
 import { chatApi } from "../features/chat/chat-api.ts";
 import { applyAgentEvent, beginTurn, emptyChatState, setReasoningOpen } from "../features/chat/chat-state.ts";
+import { useConversationScroll } from "../features/chat/conversation-scroll.ts";
 import { Transcript } from "../features/chat/Transcript.tsx";
 import type { AgentEvent, ChatState } from "../features/chat/types.ts";
+import { SettingsDialog } from "../features/settings/SettingsDialog.tsx";
+import { panelLimits, useResizablePanels } from "../features/settings/panel-layout.ts";
+import { preferenceKeys, readBooleanPreference, readThemePreference } from "../features/settings/ui-preferences.ts";
 import { api } from "../lib/api";
 import type { SessionResponse, SessionSummaryResponse, WorkspaceEntry, WorkspaceInfo } from "../lib/api";
 import type { SessionSummary, WorkspaceFile } from "../types/ui";
@@ -49,8 +55,10 @@ function previewChat(): ChatState {
 }
 
 export function App() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [workspaceOpen, setWorkspaceOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => readBooleanPreference(preferenceKeys.sidebarCollapsed, false));
+  const [workspaceOpen, setWorkspaceOpen] = useState(() => readBooleanPreference(preferenceKeys.workspaceOpen, true));
+  const [theme, setTheme] = useState(readThemePreference);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [chat, setChat] = useState<ChatState>(previewChat);
   const [sessions, setSessions] = useState<SessionSummary[]>(previewSessions);
@@ -65,18 +73,34 @@ export function App() {
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const activeTitle = useMemo(() => sessions.find((item) => item.id === chat.sessionId)?.title ?? "新会话", [chat.sessionId, sessions]);
+  const contentVersion = useMemo(() => chat.messages.map((message) => `${message.id}:${message.content.length}:${message.reasoning?.length ?? 0}:${message.reasoningOpen ? 1 : 0}:${message.tools?.length ?? 0}:${message.status}`).join("|"), [chat.messages]);
+  const conversationScroll = useConversationScroll({ sessionId: chat.sessionId, contentVersion, hasMessages: chat.messages.length > 0 });
+  const panelLayout = useResizablePanels({ sidebarCollapsed, workspaceOpen });
+  const closeSettings = useCallback(() => setSettingsOpen(false), []);
+  const shellStyle = {
+    "--sidebar-size": `${panelLayout.sidebarWidth}px`,
+    "--workspace-size": `${panelLayout.workspaceWidth}px`,
+  } as CSSProperties;
 
   const refreshSessions = async () => {
     const values = await chatApi.listSessions<SessionSummaryResponse[]>();
-    setSessions(values.map((item) => ({ id: item.session_id, title: item.title, updatedAt: formatUpdatedAt(item.updated_at), turns: item.turns })));
+    setSessions(values.map((item) => ({ id: item.session_id, title: item.title, updatedAt: formatUpdatedAt(item.updated_at), turns: item.turns, workspacePath: item.workspace_path })));
   };
 
   const refreshTree = async () => {
     setWorkspaceLoading(true);
     try { setFiles(await api.workspaceTree()); } finally { setWorkspaceLoading(false); }
+  };
+
+  const beginNewSession = () => {
+    if (chat.running) {
+      abortRef.current?.abort();
+      if (chat.sessionId && chat.sessionId !== "preview") void chatApi.cancel(chat.sessionId).catch(() => undefined);
+    }
+    setChat(emptyChatState());
+    setDraft("");
   };
 
   useEffect(() => {
@@ -97,24 +121,36 @@ export function App() {
         setWorkspaces(workspaceResult.value.items);
         try { await refreshTree(); } catch (reason) { if (active) setError(reason instanceof Error ? reason.message : String(reason)); }
       }
-      if (sessionResult.status === "fulfilled") setSessions(sessionResult.value.map((item) => ({ id: item.session_id, title: item.title, updatedAt: formatUpdatedAt(item.updated_at), turns: item.turns })));
+      if (sessionResult.status === "fulfilled") setSessions(sessionResult.value.map((item) => ({ id: item.session_id, title: item.title, updatedAt: formatUpdatedAt(item.updated_at), turns: item.turns, workspacePath: item.workspace_path })));
       if ([healthResult, modelResult, workspaceResult, sessionResult].every((result) => result.status === "rejected")) setError("后端尚未连接；当前保留界面预览，启动 FastAPI 后会自动接入本地 Agent。");
     })();
     return () => { active = false; abortRef.current?.abort(); };
   }, []);
 
-  useEffect(() => {
-    const viewport = scrollRef.current;
-    if (viewport) viewport.scrollTop = viewport.scrollHeight;
-  }, [chat.messages, chat.running]);
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#f7f7f5" : "#0b0d10");
+    window.localStorage.setItem(preferenceKeys.theme, theme);
+  }, [theme]);
 
   useEffect(() => {
-    const newSession = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === "n") { event.preventDefault(); setChat(emptyChatState()); setDraft(""); }
+    window.localStorage.setItem(preferenceKeys.sidebarCollapsed, String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    window.localStorage.setItem(preferenceKeys.workspaceOpen, String(workspaceOpen));
+  }, [workspaceOpen]);
+
+  useEffect(() => {
+    const workbenchShortcuts = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      if (event.key.toLocaleLowerCase() === "n") { event.preventDefault(); beginNewSession(); }
+      if (event.key.toLocaleLowerCase() === "b") { event.preventDefault(); setSidebarCollapsed((value) => !value); }
     };
-    window.addEventListener("keydown", newSession);
-    return () => window.removeEventListener("keydown", newSession);
-  }, []);
+    window.addEventListener("keydown", workbenchShortcuts);
+    return () => window.removeEventListener("keydown", workbenchShortcuts);
+  }, [chat.running, chat.sessionId]);
 
   const selectWorkspace = async (path: string) => {
     setError(null);
@@ -201,20 +237,27 @@ export function App() {
   };
 
   return (
-    <main className={`app-shell${sidebarCollapsed ? " app-shell--sidebar-collapsed" : ""}${workspaceOpen ? " app-shell--workspace-open" : ""}`}>
-      <Sidebar sessions={sessions} activeSessionId={chat.sessionId} collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((value) => !value)} onNewSession={() => { setChat(emptyChatState()); setDraft(""); }} onSelectSession={(sessionId) => { void loadSession(sessionId); }} />
+    <main style={shellStyle} className={`app-shell${sidebarCollapsed ? " app-shell--sidebar-collapsed" : ""}${workspaceOpen ? " app-shell--workspace-open" : ""}${panelLayout.resizing ? " app-shell--resizing" : ""}`}>
+      <Sidebar sessions={sessions} workspaces={workspaces} workspace={workspace} activeSessionId={chat.sessionId} collapsed={sidebarCollapsed} workspacePicking={workspacePicking} onToggle={() => setSidebarCollapsed((value) => !value)} onNewSession={beginNewSession} onNewWorkspace={() => { void browseWorkspace(); }} onSelectWorkspace={(path) => { void selectWorkspace(path); }} onSelectSession={(sessionId) => { void loadSession(sessionId); }} onOpenSettings={() => setSettingsOpen(true)} />
+      {!sidebarCollapsed && (
+        <div className={`panel-resizer panel-resizer--sidebar${panelLayout.resizing === "sidebar" ? " panel-resizer--active" : ""}`} role="separator" aria-label="调整会话侧栏宽度" aria-orientation="vertical" aria-valuemin={panelLimits.sidebar.min} aria-valuemax={panelLimits.sidebar.max} aria-valuenow={panelLayout.sidebarWidth} tabIndex={0} title="拖动调整，双击复位" onPointerDown={(event) => panelLayout.startResize("sidebar", event)} onKeyDown={(event) => panelLayout.resizeWithKeyboard("sidebar", event)} onDoubleClick={() => panelLayout.resetPanel("sidebar")}><span /></div>
+      )}
       <section className="chat-pane">
-        <TopBar title={activeTitle} workspaceName={workspace.name} connected={connected} workspaceOpen={workspaceOpen} onToggleWorkspace={() => setWorkspaceOpen((value) => !value)} />
-        <div className="chat-pane__content" ref={scrollRef}>
+        <TopBar title={activeTitle} workspaceName={workspace.name} connected={connected} sidebarCollapsed={sidebarCollapsed} workspaceOpen={workspaceOpen} onToggleSidebar={() => setSidebarCollapsed((value) => !value)} onToggleWorkspace={() => setWorkspaceOpen((value) => !value)} />
+        <div className="chat-pane__content" ref={conversationScroll.viewportRef} {...conversationScroll.viewportProps}>
           {error && <div className="connection-banner" role="status"><span>{error}</span><button type="button" onClick={() => setError(null)}>关闭</button></div>}
           {chat.messages.length === 0 ? <Welcome onSuggestion={setDraft} /> : <Transcript messages={chat.messages} onReasoningToggle={(messageId, open) => setChat((current) => setReasoningOpen(current, messageId, open))} />}
         </div>
+        {!conversationScroll.atBottom && <button className="scroll-to-bottom" type="button" onClick={conversationScroll.scrollToBottom}><ArrowDown size={14} /><span>回到底部</span></button>}
         <div className="composer-dock">
           <Composer value={draft} model={model} models={models} workspace={workspace} workspaces={workspaces} think={think} running={chat.running} onChange={setDraft} onModelChange={setModel} onWorkspaceChange={(path) => { void selectWorkspace(path); }} onThinkChange={setThink} onSubmit={(value) => { void submit(value); }} onStop={stop} />
-          <div className="statusbar"><span><i className={connected ? "" : "statusbar__offline"} /> {connected ? "Ollama · 本地" : "Ollama · 离线"}</span><span>RAG 已就绪</span><span>{chat.messages.length} 条消息</span><span>{workspace.name}</span></div>
         </div>
       </section>
       {workspaceOpen && <WorkspacePanel workspace={workspace} workspaces={workspaces} files={files} loading={workspaceLoading} picking={workspacePicking} onSelect={selectWorkspace} onBrowse={browseWorkspace} onClose={() => setWorkspaceOpen(false)} />}
+      {workspaceOpen && (
+        <div className={`panel-resizer panel-resizer--workspace${panelLayout.resizing === "workspace" ? " panel-resizer--active" : ""}`} role="separator" aria-label="调整工作区侧栏宽度" aria-orientation="vertical" aria-valuemin={panelLimits.workspace.min} aria-valuemax={panelLimits.workspace.max} aria-valuenow={panelLayout.workspaceWidth} tabIndex={0} title="拖动调整，双击复位" onPointerDown={(event) => panelLayout.startResize("workspace", event)} onKeyDown={(event) => panelLayout.resizeWithKeyboard("workspace", event)} onDoubleClick={() => panelLayout.resetPanel("workspace")}><span /></div>
+      )}
+      <SettingsDialog open={settingsOpen} theme={theme} sidebarCollapsed={sidebarCollapsed} workspaceOpen={workspaceOpen} model={model} models={models} think={think} onClose={closeSettings} onThemeChange={setTheme} onSidebarCollapsedChange={setSidebarCollapsed} onWorkspaceOpenChange={setWorkspaceOpen} onModelChange={setModel} onThinkChange={setThink} />
     </main>
   );
 }

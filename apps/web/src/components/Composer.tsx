@@ -1,5 +1,5 @@
 import { ArrowUp, Brain, Check, ChevronDown, FolderOpen, Gauge, Plus, Square } from "lucide-react";
-import { FormEvent, KeyboardEvent, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import type { WorkspaceInfo } from "../lib/api";
 
 type ComposerProps = {
@@ -22,6 +22,30 @@ export function Composer({ value, model, models, workspace, workspaces, think, r
   const [focused, setFocused] = useState(false);
   const [menu, setMenu] = useState<"model" | "workspace" | null>(null);
   const composing = useRef(false);
+  const addContextRef = useRef<HTMLButtonElement | null>(null);
+  const workspaceMenuRef = useRef<HTMLDivElement | null>(null);
+  const modelMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!menu) return;
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      const activeBoundary = menu === "workspace" ? workspaceMenuRef.current : modelMenuRef.current;
+      if (activeBoundary?.contains(target)) return;
+      if (menu === "workspace" && addContextRef.current?.contains(target)) return;
+      setMenu(null);
+    };
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setMenu(null);
+    };
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menu]);
 
   const submit = (event?: FormEvent) => {
     event?.preventDefault();
@@ -39,17 +63,11 @@ export function Composer({ value, model, models, workspace, workspaces, think, r
   return (
     <form className={`composer-shell${focused ? " composer-shell--focused" : ""}`} onSubmit={submit}>
       <div className="composer-shell__input-row">
-        <span className="composer-shell__caret">›</span>
-        <textarea aria-label="发送消息" rows={2} value={value} placeholder="给 EMC Agent 发送消息…  / 命令 · @ 工作区" onChange={(event) => onChange(event.target.value)} onKeyDown={onKeyDown} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />
-        {running ? (
-          <button className="composer-shell__send composer-shell__send--stop" type="button" onClick={onStop} aria-label="停止生成"><Square size={12} fill="currentColor" /></button>
-        ) : (
-          <button className="composer-shell__send" type="submit" disabled={!value.trim()} aria-label="发送"><ArrowUp size={17} /></button>
-        )}
+        <textarea aria-label="发送消息" rows={3} value={value} placeholder="向 EMC Agent 提问…" onChange={(event) => onChange(event.target.value)} onKeyDown={onKeyDown} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; }} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} />
       </div>
       <div className="composer-shell__controls">
-        <button type="button" className="composer-control composer-control--square" aria-label="添加上下文"><Plus size={15} /></button>
-        <div className="composer-menu-anchor">
+        <button ref={addContextRef} type="button" className="composer-control composer-control--square" aria-label="添加工作区上下文" aria-haspopup="menu" aria-expanded={menu === "workspace"} onClick={() => setMenu(menu === "workspace" ? null : "workspace")}><Plus size={16} /></button>
+        <div ref={workspaceMenuRef} className="composer-menu-anchor">
           <button type="button" className="composer-control" aria-haspopup="menu" aria-expanded={menu === "workspace"} onClick={() => setMenu(menu === "workspace" ? null : "workspace")}><FolderOpen size={13} /><span>{workspace.name}</span><ChevronDown size={11} /></button>
           {menu === "workspace" && (
             <div className="composer-menu" role="menu" aria-label="选择工作区">
@@ -61,7 +79,7 @@ export function Composer({ value, model, models, workspace, workspaces, think, r
           )}
         </div>
         <span className="composer-shell__divider" />
-        <div className="composer-menu-anchor">
+        <div ref={modelMenuRef} className="composer-menu-anchor">
           <button type="button" className="composer-control" aria-haspopup="menu" aria-expanded={menu === "model"} onClick={() => setMenu(menu === "model" ? null : "model")}><Brain size={13} /><span>{model}</span><ChevronDown size={11} /></button>
           {menu === "model" && (
             <div className="composer-menu composer-menu--model" role="menu" aria-label="选择模型">
@@ -75,6 +93,11 @@ export function Composer({ value, model, models, workspace, workspaces, think, r
         </div>
         <button type="button" aria-pressed={think} className={`composer-control composer-control--quiet${think ? " composer-control--active" : ""}`} onClick={() => onThinkChange(!think)}><Gauge size={13} /><span>{think ? "深度思考" : "快速回答"}</span></button>
         <span className="composer-shell__shortcut">{running ? "生成中" : "Enter 发送"}</span>
+        {running ? (
+          <button className="composer-shell__send composer-shell__send--stop" type="button" onClick={onStop} aria-label="停止生成"><Square size={12} fill="currentColor" /></button>
+        ) : (
+          <button className="composer-shell__send" type="submit" disabled={!value.trim()} aria-label="发送"><ArrowUp size={17} /></button>
+        )}
       </div>
     </form>
   );

@@ -1,19 +1,26 @@
-import { Check, PanelRight, PanelRightClose } from "lucide-react";
+import { Check, PanelLeft, PanelLeftClose, PanelRight, PanelRightClose } from "lucide-react";
 
 type TopBarProps = {
   title: string;
   workspaceName: string;
   connected: boolean;
+  sidebarCollapsed: boolean;
   workspaceOpen: boolean;
+  onToggleSidebar: () => void;
   onToggleWorkspace: () => void;
 };
 
-export function TopBar({ title, workspaceName, connected, workspaceOpen, onToggleWorkspace }: TopBarProps) {
+export function TopBar({ title, workspaceName, connected, sidebarCollapsed, workspaceOpen, onToggleSidebar, onToggleWorkspace }: TopBarProps) {
   return (
     <header className="topbar">
-      <div className="topbar__copy">
-        <strong>{title}</strong>
-        <span>EMC Agent · {workspaceName}</span>
+      <div className="topbar__leading">
+        <button className="icon-button" type="button" onClick={onToggleSidebar} aria-label={sidebarCollapsed ? "展开会话侧栏" : "折叠会话侧栏"} title={`${sidebarCollapsed ? "展开" : "折叠"}会话侧栏 (Ctrl+B)`}>
+          {sidebarCollapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
+        </button>
+        <div className="topbar__copy">
+          <strong>{title}</strong>
+          <span>EMC Agent · {workspaceName}</span>
+        </div>
       </div>
       <div className="topbar__actions">
         <span className={`status-pill${connected ? "" : " status-pill--offline"}`}>

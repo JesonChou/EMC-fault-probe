@@ -216,6 +216,7 @@ def test_session_api_accepts_model_thinking_and_workspace_context(
             },
         )
         restored = client.get(f"/api/v1/sessions/{session_id}").json()
+        summaries = client.get("/api/v1/sessions").json()
 
     assert response.status_code == 200
     assert restored["messages"][0]["metadata"] == {
@@ -223,6 +224,8 @@ def test_session_api_accepts_model_thinking_and_workspace_context(
         "think": False,
         "workspace_path": str(workspace.resolve()),
     }
+    assert restored["workspace_path"] == str(workspace.resolve())
+    assert summaries[0]["workspace_path"] == str(workspace.resolve())
 
 
 def test_session_api_rejects_model_that_is_not_installed(tmp_path: Path) -> None:
