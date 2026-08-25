@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import { expect, test } from "vitest";
 import { applyAgentEvent, beginTurn, emptyChatState, setReasoningOpen } from "./chat-state.ts";
 import { readAgentEvents } from "./event-stream.ts";
 import type { AgentEvent } from "./types.ts";
@@ -15,17 +14,17 @@ test("reasoning follows the streaming lifecycle and stays user-toggleable", () =
   let state = beginTurn(emptyChatState(), "怎么排查？", "turn-1");
   state = applyAgentEvent(state, event("assistant.thinking.delta", { delta: "先定位频点。" }));
   let assistant = state.messages[1];
-  assert.equal(assistant.reasoning, "先定位频点。");
-  assert.equal(assistant.reasoningOpen, true);
+  expect(assistant.reasoning).toBe("先定位频点。");
+  expect(assistant.reasoningOpen).toBe(true);
 
   state = applyAgentEvent(state, event("assistant.content.delta", { delta: "建议检查时钟。" }));
   assistant = state.messages[1];
-  assert.equal(assistant.reasoningComplete, true);
-  assert.equal(assistant.reasoningOpen, false);
-  assert.equal(assistant.content, "建议检查时钟。");
+  expect(assistant.reasoningComplete).toBe(true);
+  expect(assistant.reasoningOpen).toBe(false);
+  expect(assistant.content).toBe("建议检查时钟。");
 
   state = setReasoningOpen(state, assistant.id, true);
-  assert.equal(state.messages[1].reasoningOpen, true);
+  expect(state.messages[1].reasoningOpen).toBe(true);
 });
 
 test("tool calls transition from running to completed", () => {
@@ -35,13 +34,13 @@ test("tool calls transition from running to completed", () => {
     tool_name: "search_cases",
     arguments: { query: "ESD reset" },
   }));
-  assert.equal(state.messages[1].tools?.[0].status, "running");
+  expect(state.messages[1].tools?.[0].status).toBe("running");
   state = applyAgentEvent(state, event("tool.completed", {
     call_id: "call-1",
     output: [{ id: 1 }, { id: 2 }],
     error: null,
   }));
-  assert.equal(state.messages[1].tools?.[0].status, "completed");
+  expect(state.messages[1].tools?.[0].status).toBe("completed");
 });
 
 test("SSE parser keeps events intact across transport chunks", async () => {
@@ -59,6 +58,6 @@ test("SSE parser keeps events intact across transport chunks", async () => {
   }));
   const events: AgentEvent[] = [];
   for await (const item of readAgentEvents(response)) events.push(item);
-  assert.deepEqual(events.map((item) => item.type), ["turn.started", "assistant.content.delta"]);
-  assert.equal(events[1].data.delta, "ok");
+  expect(events.map((item) => item.type)).toEqual(["turn.started", "assistant.content.delta"]);
+  expect(events[1].data.delta).toBe("ok");
 });

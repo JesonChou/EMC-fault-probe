@@ -8,6 +8,8 @@
 .message--user > div { max-width: min(78%, 620px); padding: 10px 13px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel-elevated); color: var(--text); font-size: 12px; line-height: 1.6; }
 .message--assistant { gap: 10px; }
 .assistant-avatar { display: grid; width: 25px; height: 25px; flex: 0 0 auto; place-items: center; border-radius: 7px; color: #19352d; background: #b8f1de; }
+.assistant-avatar { overflow: hidden; background: transparent; }
+.assistant-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .assistant-turn { min-width: 0; flex: 1; }
 .assistant-turn__name { display: block; margin: 4px 0 9px; color: var(--text-soft); font-size: 11px; font-weight: 600; }
 .reasoning { margin: 0 0 8px; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: #101318; }
@@ -31,7 +33,16 @@
 .tool-trace--running .tool-trace__status svg { animation: tool-spin 1s linear infinite; }
 .tool-trace--failed { border-color: rgba(209,100,94,.34); background: rgba(123,45,42,.1); }
 .tool-trace--failed .tool-trace__status { color: #e28b84; }
-.assistant-answer { padding: 5px 2px 0; color: #dce0e4; font-size: 12px; line-height: 1.75; white-space: pre-wrap; }
+.assistant-answer { padding: 5px 2px 0; color: #dce0e4; font-size: 12px; line-height: 1.75; }
+.assistant-answer > :first-child { margin-top: 0; }
+.assistant-answer > :last-child { margin-bottom: 0; }
+.assistant-answer p, .assistant-answer ul, .assistant-answer ol, .assistant-answer pre, .assistant-answer table { margin: 0 0 10px; }
+.assistant-answer ul, .assistant-answer ol { padding-left: 20px; }
+.assistant-answer code { padding: 1px 4px; color: #b8e3d4; border-radius: 4px; background: #151b1e; font: 10px/1.6 "Cascadia Code",monospace; }
+.assistant-answer pre { padding: 10px; overflow: auto; border: 1px solid var(--border); border-radius: 7px; background: #0c0f12; }
+.assistant-answer pre code { padding: 0; background: transparent; }
+.assistant-answer table { width: 100%; border-collapse: collapse; }
+.assistant-answer th, .assistant-answer td { padding: 6px 7px; border: 1px solid var(--border); text-align: left; }
 .turn-error, .turn-cancelled { margin-top: 7px; padding: 7px 9px; border-radius: 7px; font-size: 10px; }
 .turn-error { color: #efaaa4; background: rgba(137,51,47,.12); }
 .turn-cancelled { color: var(--muted); background: var(--panel); }

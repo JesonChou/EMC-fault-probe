@@ -2,7 +2,7 @@ export type SessionSummary = {
   id: string;
   title: string;
   updatedAt: string;
-  active?: boolean;
+  turns?: number;
 };
 
 export type WorkspaceFile = {

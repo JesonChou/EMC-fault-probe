@@ -7,7 +7,7 @@ export const emptyChatState = (): ChatState => ({
   step: 0,
 });
 
-export function beginTurn(state: ChatState, content: string, id = crypto.randomUUID()): ChatState {
+export function beginTurn(state: ChatState, content: string, id: string = crypto.randomUUID()): ChatState {
   const user: ChatMessage = { id: `${id}-user`, role: "user", content };
   const assistant: ChatMessage = {
     id: `${id}-assistant`,

@@ -1,4 +1,5 @@
-import { Bot } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "./types.ts";
 import { ReasoningPanel } from "./ReasoningPanel.tsx";
 import { ToolTraceCard } from "./ToolTraceCard.tsx";
@@ -17,7 +18,7 @@ export function Transcript({ messages, onReasoningToggle }: TranscriptProps) {
         </article>
       ) : (
         <article className="message message--assistant" key={message.id}>
-          <div className="assistant-avatar" aria-hidden="true"><Bot size={14} /></div>
+          <div className="assistant-avatar" aria-hidden="true"><img src="./emc_fault_probe.ico" alt="" /></div>
           <div className="assistant-turn">
             <span className="assistant-turn__name">EMC Agent</span>
             <ReasoningPanel
@@ -28,7 +29,7 @@ export function Transcript({ messages, onReasoningToggle }: TranscriptProps) {
               onToggle={() => onReasoningToggle(message.id, !message.reasoningOpen)}
             />
             {message.tools?.map((tool) => <ToolTraceCard key={tool.id} tool={tool} />)}
-            {message.content && <div className="assistant-answer">{message.content}</div>}
+            {message.content && <div className="assistant-answer"><ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown></div>}
             {message.status === "failed" && <div className="turn-error">运行失败：{message.error}</div>}
             {message.status === "cancelled" && <div className="turn-cancelled">已停止生成</div>}
           </div>

@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from emc_backend.api.v1.router import api_router
 from emc_backend.composition import AppContainer, build_container
@@ -45,6 +46,11 @@ def create_app(
         lifespan=lifespan,
     )
     application.include_router(api_router)
+    # 生产构建存在时由同一个本地进程提供 Web 工作台；开发期仍可使用 Vite
+    # 的 /api 代理获得热更新。API 路由先注册，因此不会被静态挂载遮蔽。
+    web_dist = resolved_settings.project_root / "apps" / "web" / "dist"
+    if web_dist.joinpath("index.html").is_file():
+        application.mount("/", StaticFiles(directory=web_dist, html=True), name="web")
     return application
 
 

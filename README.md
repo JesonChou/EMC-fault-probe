@@ -40,19 +40,29 @@ python -m pip install -e packages/emc-core-py -e packages/emc-runtime-local-py `
 python scripts/data/build_vector_index.py
 ```
 
-在两个 PyCharm Run Configuration 或终端中分别启动：
+Web 工作台使用 Node.js 20+ 与 pnpm。在三个 PyCharm Run Configuration 或终端中启动：
 
 ```powershell
 # 后端：支持保存后自动重载
 python -m emc_backend.main --reload
 
-# 桌面端：会话、RAG 工具卡、思考折叠与流式回答
+# Web 工作台：会话、模型/工作区选择、工具轨迹、流式思考链
+corepack pnpm install
+corepack pnpm dev:web
+
+# 可选的旧桌面壳
 python -m emc_desktop_agent.main
 ```
 
-后端入口为 `emc_backend.main`，桌面入口为 `emc_desktop_agent.main`。更详细的
+浏览器访问 `http://127.0.0.1:5173`。发布时执行 `corepack pnpm build:web`，后端会在
+`http://127.0.0.1:8000` 自动托管 `apps/web/dist`。后端入口为
+`emc_backend.main`，桌面入口为 `emc_desktop_agent.main`。更详细的
 PyCharm 配置和热更新方法见 `apps/backend/README.md` 与
 `apps/desktop-agent/README.md`。
+
+模型选择器会列出本地已安装的聊天模型；不同模型的工具调用和思考能力取决于其
+Ollama 模板。单轮生成默认限制为 2048 token，可通过
+`EMC_OLLAMA_NUM_PREDICT` 调整，避免异常模型无限重复输出。
 
 Windows onedir 应用可用以下命令构建；输出 exe 位于
 `artifacts/dist/EMCProbeAgent/EMCProbeAgent.exe`：

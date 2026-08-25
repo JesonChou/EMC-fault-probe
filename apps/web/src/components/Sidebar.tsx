@@ -11,12 +11,14 @@ import { BrandMark } from "./BrandMark";
 
 type SidebarProps = {
   sessions: SessionSummary[];
+  activeSessionId: string | null;
   collapsed: boolean;
   onToggle: () => void;
   onNewSession: () => void;
+  onSelectSession: (sessionId: string) => void;
 };
 
-export function Sidebar({ sessions, collapsed, onToggle, onNewSession }: SidebarProps) {
+export function Sidebar({ sessions, activeSessionId, collapsed, onToggle, onNewSession, onSelectSession }: SidebarProps) {
   return (
     <aside className={`sidebar${collapsed ? " sidebar--collapsed" : ""}`} aria-label="会话导航">
       <div className="sidebar__brand">
@@ -44,15 +46,16 @@ export function Sidebar({ sessions, collapsed, onToggle, onNewSession }: Sidebar
         {sessions.map((session) => (
           <button
             key={session.id}
-            className={`session-row${session.active ? " session-row--active" : ""}`}
+            className={`session-row${session.id === activeSessionId ? " session-row--active" : ""}`}
             type="button"
+            onClick={() => onSelectSession(session.id)}
           >
             <MessageSquare size={14} />
             <span className="session-row__copy">
               <span className="session-row__title">{session.title}</span>
               <span className="session-row__meta">{session.updatedAt}</span>
             </span>
-            {session.active && <span className="session-row__current">当前</span>}
+            {session.id === activeSessionId && <span className="session-row__current">当前</span>}
           </button>
         ))}
       </nav>
