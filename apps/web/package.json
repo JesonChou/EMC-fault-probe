@@ -1,0 +1,5 @@
+{
+  "name": "@emc-fault-probe/web-streaming",
+  "private": true,
+  "type": "module"
+}

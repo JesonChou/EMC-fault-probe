@@ -1,0 +1,5 @@
+{
+  "name": "emc-fault-probe",
+  "private": true,
+  "type": "module"
+}
