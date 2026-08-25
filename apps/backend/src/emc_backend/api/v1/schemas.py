@@ -13,6 +13,7 @@ class SessionSummaryResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     turns: int
+    workspace_path: str | None
 
 
 class SessionMessageResponse(BaseModel):
@@ -27,6 +28,7 @@ class SessionMessageResponse(BaseModel):
 class SessionResponse(BaseModel):
     session_id: str
     created_at: datetime
+    workspace_path: str | None
     messages: list[SessionMessageResponse]
 
 
@@ -48,6 +50,7 @@ def summary_response(summary: SessionSummary) -> SessionSummaryResponse:
         created_at=summary.created_at,
         updated_at=summary.updated_at,
         turns=summary.turns,
+        workspace_path=summary.workspace_path,
     )
 
 
@@ -66,5 +69,6 @@ def session_response(session: Session) -> SessionResponse:
     return SessionResponse(
         session_id=session.session_id,
         created_at=session.created_at,
+        workspace_path=session.workspace_path,
         messages=[message_response(message) for message in session.messages],
     )

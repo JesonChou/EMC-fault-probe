@@ -26,6 +26,7 @@ export type SessionSummaryResponse = {
   created_at: string;
   updated_at: string;
   turns: number;
+  workspace_path: string | null;
 };
 
 export type SessionMessageResponse = {
@@ -40,6 +41,7 @@ export type SessionMessageResponse = {
 export type SessionResponse = {
   session_id: string;
   created_at: string;
+  workspace_path: string | null;
   messages: SessionMessageResponse[];
 };
 

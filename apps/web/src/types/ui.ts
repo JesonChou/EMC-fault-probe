@@ -3,6 +3,7 @@ export type SessionSummary = {
   title: string;
   updatedAt: string;
   turns?: number;
+  workspacePath?: string | null;
 };
 
 export type WorkspaceFile = {

@@ -44,6 +44,7 @@ class SessionSummary:
     created_at: datetime
     updated_at: datetime
     turns: int
+    workspace_path: str | None = None
 
 
 @dataclass(slots=True)
@@ -52,6 +53,16 @@ class Session:
     created_at: datetime
     messages: list[SessionMessage] = field(default_factory=list)
     events: list[AgentEvent] = field(default_factory=list)
+
+    @property
+    def workspace_path(self) -> str | None:
+        """Return the workspace that the first contextualized turn bound to."""
+
+        for message in self.messages:
+            value = message.metadata.get("workspace_path")
+            if message.role is MessageRole.USER and isinstance(value, str) and value:
+                return value
+        return None
 
     @property
     def summary(self) -> SessionSummary:
@@ -68,4 +79,5 @@ class Session:
             created_at=self.created_at,
             updated_at=updated_at,
             turns=len(user_messages),
+            workspace_path=self.workspace_path,
         )
